@@ -97,6 +97,7 @@ The final verification confirms:
 - ✅ **SU(2)_L**: 3 generators (weak isospin) 
 - ✅ **U(1)_Y**: 1 generator (hypercharge)
 - ✅ **Geometric embedding** with shell separation
+- ✅ **Perpendicular pair mapping**: σ (90°) maps Λₖ → Λₖ₊₅
 
 ## 🔬 Core Mathematical Framework
 
@@ -125,7 +126,7 @@ The 240 E₈ roots partition into **ten disjoint 24-cells**:
 - **Λ₅**: σ(Λ₀) 
 - **Λ₆₋₉**: S^k(Λ₅) for k = 1,2,3,4
 
-**Key insight**: Perpendicular pairs (Λₖ, Λₖ₊₅) linked by σ.
+**Key insight**: Perpendicular pairs (Λₖ, Λₖ₊₅) linked by σ (90° rotation).
 
 ### Stabilizer Algebras
 
@@ -156,7 +157,7 @@ The 240 E₈ roots partition into **ten disjoint 24-cells**:
 
 - **Shell structure**: Ten 24-cells with distinct transformation properties
 - **Hopf fibration**: S³ → S⁷ → S⁴ geometric structure  
-- **Chirality**: ±60° isoclinic twists create left/right separation
+- **Chirality**: ±90° isoclinic twists create left/right separation
 
 This demonstrates how **gauge symmetries emerge from discrete geometry** without requiring naive algebraic commutation!
 
@@ -169,7 +170,7 @@ This demonstrates how **gauge symmetries emerge from discrete geometry** without
 ### Geometric Structure  
 - `shell_0.npy` ... `shell_9.npy`: Ten 24-cell shells (24×8 arrays)
 - `partners.npy`: Perpendicular pair mappings
-- `R_60_isoclinic.npy`: Perpendicular pair rotation
+- `R_60_isoclinic.npy`: Perpendicular pair rotation (empirically found to be 90°)
 
 ### Stabilizer Algebras
 - `stab_sigma_generators.npy`: U(4) generators (16×8×8)
@@ -199,7 +200,14 @@ assert all(shell.shape == (24, 8) for shell in shells)
 assert total_roots == 240
 ```
 
-### 3. Stabilizer Dimensions
+### 3. Perpendicular Pair Mapping
+```python
+# Empirically discovers σ (90°) maps Λₖ → Λₖ₊₅
+assert perpendicular_pair_rotation == sigma  # 90° rotation
+assert rotation_angle == 90.0  # Not 60° as theoretically expected
+```
+
+### 4. Stabilizer Dimensions
 ```python
 # Confirms Theorem 6.1
 assert len(u4_generators) == 16    # u(4)
@@ -207,7 +215,7 @@ assert len(su3_generators) == 8    # su(3)
 assert len(su2_generators) == 3    # su(2)
 ```
 
-### 4. Standard Model Structure
+### 5. Standard Model Structure
 ```python
 # Verifies gauge group embedding
 assert dimensions == [8, 3, 1]     # SU(3) ⊕ SU(2) ⊕ U(1)
