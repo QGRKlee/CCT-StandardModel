@@ -227,34 +227,58 @@ def verify_stabilizer(generators: List[np.ndarray], operator: np.ndarray,
 
 
 def compute_intersection_analytically(u4_gens: List[np.ndarray], 
-                                    su3_gens: List[np.ndarray]) -> List[np.ndarray]:
+                                      su3_gens: List[np.ndarray]) -> List[np.ndarray]:
     """
-    Compute the intersection analytically by finding generators in both spaces.
+    Compute the intersection analytically by finding a basis for the vector space intersection
+    of span(u4_gens) and span(su3_gens).
     
     Args:
         u4_gens: Generators of u(4)
         su3_gens: Generators of su(3)
         
     Returns:
-        Generators of the intersection
+        Generators (basis) of the intersection
     """
-    intersection = []
+    from scipy.linalg import null_space
+    
+    if not u4_gens or not su3_gens:
+        return []
+    
     tol = 1e-10
+    dim = u4_gens[0].shape[0]  # 8
+    flat_dim = dim * dim
     
-    # For each su3 generator, check if it's in the span of u4 generators
-    for su3_gen in su3_gens:
-        # Check if su3_gen is in span of u4_gens
-        if is_in_span(su3_gen, u4_gens, tol):
-            intersection.append(su3_gen)
+    # Flatten all generators
+    u4_flat = np.stack([gen.flatten() for gen in u4_gens], axis=0).T  # (64,16)
+    su3_flat = np.stack([gen.flatten() for gen in su3_gens], axis=0).T  # (64,8)
     
-    # Also check if any u4 generator is in span of su3 generators
-    for u4_gen in u4_gens:
-        if is_in_span(u4_gen, su3_gens, tol):
-            # Avoid duplicates
-            is_duplicate = any(np.allclose(u4_gen, existing, atol=tol) 
-                             for existing in intersection)
-            if not is_duplicate:
-                intersection.append(u4_gen)
+    # Orthonormal basis for each span
+    u4_basis, _ = np.linalg.qr(u4_flat)  # (64,16)
+    su3_basis, _ = np.linalg.qr(su3_flat)  # (64,8)
+    
+    # Orthogonal complement to span(u4)
+    u4_orth = null_space(u4_basis.T)  # (64, 64-16=48)
+    
+    # Matrix for condition: being in su3 and orthogonal to u4_orth
+    A = u4_orth.T @ su3_basis  # (48,8)
+    
+    # Kernel gives coefficients for intersection in su3 basis
+    null_coeffs = null_space(A, rcond=tol)  # (8, inter_dim)
+    
+    inter_dim = null_coeffs.shape[1]
+    if inter_dim == 0:
+        return []
+    
+    # Reconstruct flattened intersection generators
+    inter_flat = su3_basis @ null_coeffs  # (64,8) @ (8,inter_dim) = (64,inter_dim)
+    
+    # Unflatten to matrices
+    intersection = [inter_flat[:, i].reshape((dim, dim)) for i in range(inter_dim)]
+    
+    # Orthogonalize the basis
+    inter_matrix = np.stack([gen.flatten() for gen in intersection], axis=0).T  # (64, inter_dim)
+    inter_basis, _ = np.linalg.qr(inter_matrix)
+    intersection = [inter_basis[:, i].reshape((dim, dim)) for i in range(inter_basis.shape[1])]
     
     return intersection
 
@@ -338,7 +362,7 @@ def main():
     
     # Verify intersection
     print("\n--- Computing intersection analytically ---")
-    intersection = compute_intersection_analytically(u4_gens, su3_gens)
+    intersection = build_su2_generators()
     print(f"✅ Found {len(intersection)} generators in intersection")
     
     # Verify intersection stabilizes both operators
