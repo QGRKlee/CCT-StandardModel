@@ -163,13 +163,6 @@ theta = 2 * np.pi / 5  # 72°
 - **Chirality:** Intrinsic from ±60°/90° twists in perpendicular pairs
 - **Embedding:** SU(3)_C × SU(2)_L × U(1)_Y ⊆ U(4) ⊆ Spin(8), unique up to conjugation (Theorem 7.1)
 
-### Open Questions (from Paper Section 9.2)
-
-- Fermion generations in shells?
-- Discrete dynamics/Lagrangian analog?
-- Gauge couplings from geometry?
-- Links to discrete quantum gravity?
-
 ## 📁 Generated Data Files
 
 - **Operators:** S_matrix.json, sigma_matrix.json (vector); S_spin.npy, sigma_spin.npy (spinor)
@@ -213,10 +206,6 @@ assert np.allclose(Y_diag, [1/3, 1/3, 1/3, -1, ...])
 - **24-Cells:** 4D polytopes as D₄ roots
 - **Hopf Fibration:** Discrete analog S³ → S⁷ → S⁴
 
-## 🤝 Contributing
-
-Contributions welcome! For bugs or extensions (e.g., visualizations, fermion mapping), open issues/PRs. Focus on maintaining machine-verifiability.
-
 ## 📖 Citation
 
 Cite the paper and repo:
@@ -240,5 +229,3 @@ MIT License - See LICENSE file for details.
 Built on collaboration at Quantum Gravity Research. Thanks to open-source tools (NumPy, SciPy, SymPy) for enabling precise verification.
 
 ---
-
-*This README encapsulates the full project: from discrete E₈ geometry to verified SM emergence. Data ~380KB total.*
