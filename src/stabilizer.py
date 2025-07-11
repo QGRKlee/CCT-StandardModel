@@ -167,38 +167,29 @@ def build_su2_generators() -> List[np.ndarray]:
         List of 3 generators for su(2)
     """
     generators = []
-    
-    # The su(2) likely acts on coordinates that are special under both operations
-    # Based on the structure, this might be related to the last coordinate or
-    # some combination
-    
-    # Standard su(2) generators (Pauli matrices) acting on a 2D subspace
-    # Let's assume it acts on coordinates (2,3) and (6,7)
-    
-    # σ_x equivalent
-    gen_x = np.zeros((8, 8))
-    gen_x[2, 3] = 1
-    gen_x[3, 2] = -1
-    gen_x[6, 7] = 1
-    gen_x[7, 6] = -1
+    # gen_x: Pauli x equivalent
+    gen_x = np.zeros((8,8))
+    gen_x[2,3] = 1
+    gen_x[3,2] = -1
+    gen_x[6,7] = 1
+    gen_x[7,6] = -1
     generators.append(gen_x)
-    
-    # σ_y equivalent  
-    gen_y = np.zeros((8, 8))
-    gen_y[2, 7] = 1
-    gen_y[7, 2] = -1
-    gen_y[3, 6] = -1
-    gen_y[6, 3] = 1
+
+    # gen_y: Pauli y equivalent (adjusted signs for commutation)
+    gen_y = np.zeros((8,8))
+    gen_y[2,7] = 1
+    gen_y[7,2] = -1
+    gen_y[3,6] = 1
+    gen_y[6,3] = -1
     generators.append(gen_y)
-    
-    # σ_z equivalent
-    gen_z = np.zeros((8, 8))
-    gen_z[2, 2] = 1
-    gen_z[6, 6] = 1
-    gen_z[3, 3] = -1
-    gen_z[7, 7] = -1
+
+    # gen_z: Pauli z equivalent (adjusted signs for commutation)
+    gen_z = np.zeros((8,8))
+    gen_z[2,6] = 1
+    gen_z[6,2] = -1
+    gen_z[3,7] = 1
+    gen_z[7,3] = -1
     generators.append(gen_z)
-    
     return generators
 
 
