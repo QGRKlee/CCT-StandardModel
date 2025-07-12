@@ -14,6 +14,7 @@ import os
 from os.path import dirname, abspath, join
 from typing import List, Tuple
 import json
+from scipy.linalg import null_space
 
 
 def load_operators() -> Tuple[np.ndarray, np.ndarray]:
@@ -72,7 +73,7 @@ def build_u4_generators() -> List[np.ndarray]:
             gen_real[k + 4, j + 4] = -1
             generators.append(gen_real)
             
-            # Imaginary part: i(E_{jk} + E_{kj}) ⊗ I_2 = (E_{jk} + E_{kj}) ⊗ J
+            # Imaginary part: (E_{jk} + E_{kj}) ⊗ J
             gen_imag = np.zeros((8, 8))
             gen_imag[j, k + 4] = 1
             gen_imag[k + 4, j] = -1
@@ -80,25 +81,80 @@ def build_u4_generators() -> List[np.ndarray]:
             gen_imag[j + 4, k] = -1
             generators.append(gen_imag)
     
-    # Type 2: Diagonal generators E_{jj} - E_{kk} for j < k (Cartan subalgebra)
+    # Type 2: Diagonal generators i (E_{jj} - E_{kk}) which in real rep is J_j - J_{k}
     for j in range(3):  # Only need 3 to make traceless 4x4 matrices
         gen_diag = np.zeros((8, 8))
-        # This represents diag(0,...,0,1,0,...,0,-1,0,...,0) in complex form
-        # In real form: affects both real and imaginary parts equally
-        gen_diag[j, j] = 1
-        gen_diag[j + 1, j + 1] = -1
-        gen_diag[j + 4, j + 4] = 1
-        gen_diag[j + 1 + 4, j + 1 + 4] = -1
+        # J on plane j
+        gen_diag[j, j+4] = -1
+        gen_diag[j+4, j] = 1
+        # -J on plane j+1
+        gen_diag[j+1, j+1+4] = 1
+        gen_diag[j+1+4, j+1] = -1
         generators.append(gen_diag)
     
-    # Type 3: The u(1) generator (trace/center)
+    # Type 3: The u(1) generator i I, which in real rep is sum J_k over all planes (σ itself)
     gen_u1 = np.zeros((8, 8))
     for k in range(4):
-        gen_u1[k, k] = 1
-        gen_u1[k + 4, k + 4] = 1
+        gen_u1[k, k+4] = -1
+        gen_u1[k+4, k] = 1
     generators.append(gen_u1)
     
     return generators
+
+
+def extract_u4_basis_numerical(sigma: np.ndarray) -> List[np.ndarray]:
+    """
+    Numerically extract the basis for the U(4) stabilizer by solving [X, σ] = 0,
+    where X is skew-symmetric (so(8)).
+    
+    Args:
+        sigma: Numerical 8x8 matrix for σ operator.
+        
+    Returns:
+        List of 16 numerical basis matrices for u(4).
+    """
+    dim = sigma.shape[0]  # 8
+    tol = 1e-10
+    
+    # Upper triangle indices for skew (no diagonal)
+    upper_indices = [(i, j) for i in range(dim) for j in range(i+1, dim)]
+    num_vars = len(upper_indices)  # 28
+    
+    # Build basis skew matrices
+    basis_mats = []
+    for (i, j) in upper_indices:
+        E = np.zeros((dim, dim))
+        E[i, j] = 1
+        E[j, i] = -1
+        basis_mats.append(E)
+    
+    # Compute [σ, E] for each basis E, vectorize upper of comm (skew)
+    comm_vecs = []
+    for E in basis_mats:
+        comm = sigma @ E - E @ sigma
+        comm_vec = np.array([comm[p, q] for p, q in upper_indices])
+        comm_vecs.append(comm_vec)
+    
+    A = np.stack(comm_vecs, axis=0)  # 28x28
+    
+    # Null space
+    null = null_space(A, rcond=tol)
+    num_basis = null.shape[1]
+    
+    if num_basis != 16:
+        raise ValueError(f"Expected 16 basis elements, got {num_basis}")
+    
+    # Reconstruct basis matrices from null vectors
+    basis = []
+    for col in range(num_basis):
+        coeffs = null[:, col]
+        X = np.zeros((dim, dim))
+        for k, (i, j) in enumerate(upper_indices):
+            X[i, j] = coeffs[k]
+            X[j, i] = -coeffs[k]
+        basis.append(X)
+    
+    return basis
 
 
 def build_su3_generators() -> List[np.ndarray]:
@@ -136,22 +192,26 @@ def build_su3_generators() -> List[np.ndarray]:
             generators.append(gen_imag)
     
     # Cartan subalgebra for su(3): 2 diagonal generators
-    # H1: diag(1, -1, 0) in the 3x3 block
+    # H1: i (E00 - E11), in real: J0 - J1
     gen_h1 = np.zeros((8, 8))
-    gen_h1[0, 0] = 1
-    gen_h1[1, 1] = -1
-    gen_h1[4, 4] = 1
-    gen_h1[5, 5] = -1
+    gen_h1[0, 4] = -1
+    gen_h1[4, 0] = 1
+    gen_h1[1, 5] = 1
+    gen_h1[5, 1] = -1
     generators.append(gen_h1)
     
-    # H2: diag(1, 1, -2)/√3 in the 3x3 block (normalized)
+    # H2: i (E00 + E11 - 2 E22)/sqrt(3), in real: (J0 + J1 - 2 J2)/sqrt(3)
     gen_h2 = np.zeros((8, 8))
-    gen_h2[0, 0] = 1/np.sqrt(3)
-    gen_h2[1, 1] = 1/np.sqrt(3)
-    gen_h2[2, 2] = -2/np.sqrt(3)
-    gen_h2[4, 4] = 1/np.sqrt(3)
-    gen_h2[5, 5] = 1/np.sqrt(3)
-    gen_h2[6, 6] = -2/np.sqrt(3)
+    coeff = 1/np.sqrt(3)
+    # J0
+    gen_h2[0, 4] = -coeff
+    gen_h2[4, 0] = coeff
+    # J1
+    gen_h2[1, 5] = -coeff
+    gen_h2[5, 1] = coeff
+    # -2 J2
+    gen_h2[2, 6] = 2*coeff
+    gen_h2[6, 2] = -2*coeff
     generators.append(gen_h2)
     
     return generators
@@ -351,6 +411,35 @@ def main():
     print(f"✅ Built u(4) generators: {len(u4_gens)}")
     print(f"✅ Built su(3) generators: {len(su3_gens)}")
     print(f"✅ Built su(2) generators: {len(su2_gens)}")
+    
+    # New: Extract numerical U(4) basis
+    print("\n" + "="*60)
+    print("EXTRACTING NUMERICAL U(4) BASIS")
+    print("="*60)
+    
+    try:
+        u4_basis_num = extract_u4_basis_numerical(sigma)
+        print(f"✅ Extracted {len(u4_basis_num)} numerical U(4) basis elements")
+        
+        # Orthogonalize both bases for accurate comparison
+        u4_built_flat = np.stack([gen.flatten() for gen in u4_gens], axis=0).T  # (64,16)
+        u4_built_ortho, _ = np.linalg.qr(u4_built_flat)  # (64,16)
+        
+        u4_extracted_flat = np.stack([gen.flatten() for gen in u4_basis_num], axis=0).T  # (64,16)
+        u4_extracted_ortho, _ = np.linalg.qr(u4_extracted_flat)  # (64,16)
+        
+        # Combined ortho basis
+        combined = np.hstack((u4_built_ortho, u4_extracted_ortho))  # (64,32)
+        rank = np.linalg.matrix_rank(combined, tol=1e-10)
+        
+        if rank == 16:
+            print("✅ Extracted and built bases span the same space")
+        else:
+            print(f"⚠️  Warning: Span mismatch (rank {rank} != 16)")
+            
+    except Exception as e:
+        print(f"❌ Error extracting numerical basis: {e}")
+        print("   Continuing with built basis only...")
     
     # Verify these actually stabilize the operators
     print("\n" + "="*60)
