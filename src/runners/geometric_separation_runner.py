@@ -12,6 +12,11 @@ for p in (LEM2, LEM3):
 
 from geometric_separation import check_geometric_separation
 
+def run():
+    """Return the geometric-separation check as a dict."""
+    return check_geometric_separation()
+
 if __name__ == "__main__":
-    out = check_geometric_separation()
-    print(json.dumps(out, indent=2, sort_keys=True))
+    import json
+    print(json.dumps(run(), indent=2, sort_keys=True))
+
