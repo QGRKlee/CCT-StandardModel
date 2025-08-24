@@ -12,11 +12,21 @@ if src_path not in sys.path:
 from __future__ import annotations
 import numpy as np
 
-# --- expected hooks from your codebase (adjust names if different) ---
-try:
-    from shells import build_shell_projectors
-except Exception:
-    build_shell_projectors = None
+from shells import get_shell_orthonormal_bases
+from isoclinic import get_S, get_sigma
+
+def build_shell_projectors():
+    """
+    Construct orthogonal projectors P_k = B_k B_k^T from the per‑shell orthonormal bases B_k (8×d_k).
+    Returns a list [P_0, …, P_9].
+    """
+    bases = get_shell_orthonormal_bases()  # list of 10 matrices, each 8×d_k with orthonormal columns
+    P_list = []
+    for B in bases:
+        P = B @ B.T  # (8×d_k)·(d_k×8) = 8×8 projector
+        P_list.append(P)
+    return P_list
+
 
 try:
     from isoclinic import get_sigma, get_S
