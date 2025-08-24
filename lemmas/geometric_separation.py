@@ -1,5 +1,14 @@
 # === [LEMMA-7 GEOMETRIC-SEPARATION STUB v1] ===
 # Minimal utilities to test "geometric separation ⇒ emergent commutativity".
+
+# Path shim so this script can import from ../src
+import os, sys
+_here = os.path.dirname(__file__)
+src_path = os.path.abspath(os.path.join(_here, "..", "src"))
+if src_path not in sys.path:
+    sys.path.append(src_path)
+
+
 from __future__ import annotations
 import numpy as np
 
