@@ -470,7 +470,12 @@ def main():
     
     # Also save as the "60 degree" rotation for compatibility
     np.save(join(data_dir, 'R_60_isoclinic.npy'), R_perp)
-    
+    # --- BEGIN: lemma wiring (added) ---
+# Save an explicit 60°-separation copy for A2-hexagon checks (alias file)
+np.save(os.path.join(data_dir, 'R_60_isoclinic.npy'), R_perp)
+print("✓ Saved R_60_isoclinic.npy for A2-hexagon mapping checks.")
+# --- END: lemma wiring (added) ---
+
     print("\n🎉 All isoclinic rotation verifications completed successfully!")
     print(f"\n📋 Summary:")
     print(f"   - S (fast pointer): 72° rotation, order 5")
