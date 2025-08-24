@@ -28,6 +28,17 @@ def load_R60():
     p = join(DATA_DIR, "R_60_isoclinic.npy")
     if os.path.exists(p):
         return np.load(p)
+
+    # Fallback: older filename variant
+    q = join(DATA_DIR, "R_perpendicular_pairs.npy")
+    if os.path.exists(q):
+        return np.load(q)
+
+    # If neither file exists, fail clearly
+    raise FileNotFoundError(
+        f"Neither R_60_isoclinic.npy nor R_perpendicular_pairs.npy found in {DATA_DIR}"
+    )
+
     # Compatibility: our 60° rotation was also saved under this name in isoclinic.py
     q = join(DATA_DIR, "R_perpendicular_pairs.npy")
     if os.path.exists(q):
