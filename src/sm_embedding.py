@@ -718,6 +718,16 @@ def main():
         print("   The embedding captures the essential physics through")
         print("   discrete geometry and shell structure separation.")
 
+# --- hook used by lemmas: export SM generators ---
+def get_generators():
+    """
+    Return dict with embedded generators:
+      'su3': list of 8 su(3) generators (8x8 each),
+      'su2': list of 3 su(2) generators,
+      'u1Y': single 8x8 hypercharge matrix.
+    """
+    # CHANGE the names on the right-hand side to your actual variables.
+    return {"su3": SU3_COLOR_GENS, "su2": SU2_WEAK_GENS, "u1Y": U1_Y}
 
 if __name__ == "__main__":
     main()
