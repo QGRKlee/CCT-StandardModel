@@ -98,7 +98,8 @@ def run_geometric_separation(tol: float = 1e-12):
         "per_shell_comm_norms": out.get("per_shell_comm_norms", []),
     }
 
-
 if __name__ == "__main__":
-    result = check_geometric_separation()
-    print(result)
+    import json
+    res = run_geometric_separation()
+    print(json.dumps(res, indent=2, sort_keys=True))
+
