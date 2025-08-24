@@ -97,3 +97,36 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# --- hook used by lemmas: returns 10 orthonormal bases, one per 24-cell shell ---
+import numpy as np
+
+def get_shell_orthonormal_bases():
+    """
+    Return list of orthonormal bases (8 x d_k) for each disjoint 24-cell shell Λ_k.
+    If your code builds shells differently, replace the builder call below with your function/variable.
+    """
+    shells = None
+    for fn_name in ("build_shells", "get_shells", "partition_shells", "shells"):
+        fn = globals().get(fn_name, None)
+        if callable(fn):
+            shells = fn()
+            break
+        if fn_name == "shells" and isinstance(globals().get("shells", None), (list, tuple)):
+            shells = globals()["shells"]
+            break
+
+    if shells is None:
+        raise RuntimeError("No shells found — replace call in get_shell_orthonormal_bases() with your actual builder.")
+
+    bases = []
+    for sh in shells:
+        A = np.array(sh)
+        if A.shape[1] == 8 and A.shape[0] != 8:
+            A = A.T
+        if A.shape[0] != 8:
+            A = A.T
+        Q, R = np.linalg.qr(A)
+        r = np.linalg.matrix_rank(A)
+        bases.append(Q[:, :r])
+    return bases
