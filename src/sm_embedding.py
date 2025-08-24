@@ -18,6 +18,22 @@ from typing import List, Tuple, Dict
 from itertools import combinations
 import json
 
+import os
+import numpy as np
+from os.path import join, dirname, abspath
+
+DATA_DIR = abspath(join(dirname(__file__), "data"))
+
+def load_R60():
+    p = join(DATA_DIR, "R_60_isoclinic.npy")
+    if os.path.exists(p):
+        return np.load(p)
+    # Compatibility: our 60° rotation was also saved under this name in isoclinic.py
+    q = join(DATA_DIR, "R_perpendicular_pairs.npy")
+    if os.path.exists(q):
+        return np.load(q)
+    raise FileNotFoundError("Neither R_60_isoclinic.npy nor R_perpendicular_pairs.npy found.")
+
 
 def load_stabilizer_generators() -> Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]]:
     """
