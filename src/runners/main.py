@@ -1,68 +1,32 @@
-# src/runners/main.py
-# Run available lemma checks and emit a single JSON.
+# runners/main.py
 
-from __future__ import annotations
-import json, sys
+import json
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]  # .../CCT-StandardModel
-SRC  = ROOT / "src"
-LEM2 = ROOT / "lemmas" / "lemmas"
-LEM3 = ROOT / "lemmas" / "lemmas" / "lemmas"  # your tree shows 3 levels
+# Always works (you already have this file)
+from .geometric_separation_runner import run as run_geometric_separation
 
-for p in (SRC, LEM2, LEM3):
-    ps = str(p)
-    if ps not in sys.path:
-        sys.path.append(ps)
+# Add these later, after we create the files
+# from .uniqueness_runner import run as run_uniqueness
+# from .a2_hexagon_runner import run as run_a2_hexagon
 
-# --- imports from src (safe even if not used) ---
-try:
-    from shells import main as build_shells
-except Exception:
-    build_shells = None
+def main():
+    out = {}
 
-try:
-    from isoclinic import main as verify_isoclinic
-except Exception:
-    verify_isoclinic = None
+    # 1) geometric separation
+    out["geometric_separation"] = run_geometric_separation()
 
-# --- lemma imports (use the actual function names in your files) ---
-from geometric_separation import check_geometric_separation
-from uniqueness_up_to_conj import sample_conjugacy_certificate
+    # 2) uniqueness up to conjugacy (uncomment after file exists)
+    # out["uniqueness_up_to_conj"] = run_uniqueness()
 
-def run_all():
-    core = {}
+    # 3) A2 hexagon mapping (uncomment after file exists)
+    # out["a2_hexagon_mapping"] = run_a2_hexagon()
 
-    if build_shells:
-        try:
-            build_shells()
-            core["shells"] = "ok"
-        except Exception as e:
-            core["shells"] = f"error: {e}"
-
-    if verify_isoclinic:
-        try:
-            verify_isoclinic()
-            core["isoclinic"] = "ok"
-        except Exception as e:
-            core["isoclinic"] = f"error: {e}"
-
-    results = []
-
-    try:
-        geo = check_geometric_separation()
-        results.append({"lemma": "geometric_separation", **geo})
-    except Exception as e:
-        results.append({"lemma": "geometric_separation", "error": str(e)})
-
-    try:
-        uniq = sample_conjugacy_certificate(max_layers=2)
-        results.append({"lemma": "uniqueness_up_to_conj", **uniq})
-    except Exception as e:
-        results.append({"lemma": "uniqueness_up_to_conj", "error": str(e)})
-
-    payload = {"core": core, "lemmas": results}
-    print(json.dumps(payload, indent=2, sort_keys=True))
+    # write a single JSON blob next to this file (../data/lemmas_results.json)
+    data_dir = Path(__file__).resolve().parent.parent / "data"
+    data_dir.mkdir(parents=True, exist_ok=True)
+    (data_dir / "lemmas_results.json").write_text(json.dumps(out, indent=2))
+    print("✅ wrote", data_dir / "lemmas_results.json")
 
 if __name__ == "__main__":
-    run_all()
+    main()
