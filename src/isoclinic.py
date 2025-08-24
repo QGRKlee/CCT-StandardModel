@@ -87,7 +87,15 @@ def find_perpendicular_pair_rotation(shells: List[np.ndarray]) -> np.ndarray:
     # Try different combinations of the basic rotations
     S = construct_standard_isoclinic_S()
     sigma = construct_standard_isoclinic_sigma()
-    
+
+    def get_S():
+    """Return the 8x8 matrix for S (order-5)."""
+    return S
+
+def get_sigma():
+    """Return the 8x8 matrix for σ (order-4)."""
+    return sigma
+
     candidates = [
         ("σ", sigma),  # σ
         ("S∘σ", S @ sigma),  # S∘σ  
