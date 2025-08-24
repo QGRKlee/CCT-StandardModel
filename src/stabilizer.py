@@ -492,6 +492,16 @@ def main():
         print("\n⚠️  Some stabilizer relations need adjustment")
         print("   The geometric structure may be more subtle than the initial construction")
 
+# --- hooks used by lemmas: export generators for stabilizers ---
+def get_stabilizer_generators_sigma():
+    """Return a generating set (list of matrices) for Stab(σ)."""
+    # CHANGE the name below to whatever your list/tuple is actually called.
+    return STAB_SIGMA_GENERATORS
+
+def get_stabilizer_generators_S():
+    """Return a generating set (list of matrices) for Stab(S)."""
+    # CHANGE the name below to whatever your list/tuple is actually called.
+    return STAB_S_GENERATORS
 
 if __name__ == "__main__":
     main()
