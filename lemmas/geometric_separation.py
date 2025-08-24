@@ -1,3 +1,16 @@
+"""
+Lemma (Geometric separation ⇒ effective commutation).
+If P is the projector onto any E8 24‑cell shell and S (order 5) and σ (order 4) are the
+Cl(8) rotors used in the paper, then on the projected subspace we have
+  || [P S P, P σ P] ||_F ≤ tol
+for the same numerical tolerance used in isoclinic.py.
+
+This formalizes the intuition that disjoint shells yield commuting actions “in practice”,
+matching the twist/discrete‑curvature equivalence used in the construction.  See also
+Fang–Clawson–Irwin for the twist ↔ discrete curvature angle matching. 
+"""
+
+
 # geometric_separation.py
 # Machine check for “geometric separation”: S (order 5) and σ (order 4) commute
 # and, when restricted to each 24‑cell shell, their effective commutator is ~0.
