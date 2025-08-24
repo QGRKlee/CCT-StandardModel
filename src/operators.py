@@ -87,6 +87,17 @@ def build_spinor():
     np.save(SPIN_S_NPY, S_spin)
     np.save(SPIN_SIGMA_NPY, sigma_spin)
     print(f"✅ Wrote {os.path.basename(SPIN_S_NPY)} and {os.path.basename(SPIN_SIGMA_NPY)}")
+# --- BEGIN: helper for A2-hexagon sanity (added) ---
+def rotation_angle(v1, v2):
+    """Return the unsigned angle (in radians) between two nonzero vectors v1, v2 in R^8."""
+    v1 = np.asarray(v1, dtype=float); v2 = np.asarray(v2, dtype=float)
+    n1 = np.linalg.norm(v1); n2 = np.linalg.norm(v2)
+    if n1 == 0 or n2 == 0:
+        raise ValueError("rotation_angle: zero-length input")
+    cosang = np.dot(v1, v2) / (n1 * n2)
+    cosang = np.clip(cosang, -1.0, 1.0)
+    return float(np.arccos(cosang))
+# --- END: helper for A2-hexagon sanity (added) ---
 
 if __name__ == '__main__':
     dump_vector()
