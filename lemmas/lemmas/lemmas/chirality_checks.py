@@ -36,7 +36,12 @@ def check_shell_pairing_chirality(pair_offset: int = 5) -> list[dict]:
             ok = False
         out.append({"k": k, "k_pair": kp, "sign_k": s1, "sign_kpair": s2, "opposite": bool(ok)})
     return out
+def run() -> dict:
+    """Uniform entry point for runners."""
+    return check_chirality()
 
 if __name__ == "__main__":
-    print(check_shell_pairing_chirality())
+    import json
+    print(json.dumps(run(), indent=2, sort_keys=True))
+
 # === [LEMMA-9 CHIRALITY STUB v1 END] ===
