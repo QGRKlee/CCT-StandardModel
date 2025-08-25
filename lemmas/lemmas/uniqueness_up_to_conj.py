@@ -82,6 +82,16 @@ def sample_conjugacy_certificate(max_layers: int = 2, tol: float = 1e-10) -> dic
 
     return {"ok": True, "layers": max_layers, "tested": tested}
 
+def run() -> dict:
+    """
+    Uniform entry point for runners. Returns a JSON‑serializable dict.
+    You can change layers via env var UNIQUENESS_LAYERS (default 2).
+    """
+    max_layers = int(os.getenv("UNIQUENESS_LAYERS", "2"))
+    return sample_conjugacy_certificate(max_layers=max_layers, tol=1e-10)
+
+
 if __name__ == "__main__":
-    res = sample_conjugacy_certificate()
+    res = run()
     print(json.dumps(res, indent=2, sort_keys=True))
+
