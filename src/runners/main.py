@@ -1,15 +1,24 @@
 # src/runners/main.py
 import json
+from importlib import import_module
 
-from geometric_separation_runner import run as run_geometric_separation
-from uniqueness_runner import run as run_uniqueness
+# Map task keys to (module, function)
+TASKS = {
+    "geometric_separation": ("src.runners.geometric_separation_runner", "run"),
+    "uniqueness": ("src.runners.uniqueness_runner", "run"),
+    "chirality": ("src.runners.chirality_runner", "run"),
+}
 
-def main():
-    results = {
-        "geometric_separation": run_geometric_separation(),
-        "uniqueness_up_to_conjugacy": run_uniqueness(),
-    }
-    print(json.dumps(results, indent=2, sort_keys=True))
+def run_all():
+    out = {}
+    for key, (mod, fn) in TASKS.items():
+        m = import_module(mod)
+        res = getattr(m, fn)()
+        # normalize typical fields
+        if isinstance(res, dict):
+            res.setdefault("ok", True if "passed" in res and res["passed"] else res.get("ok", None))
+        out[key] = res
+    return out
 
 if __name__ == "__main__":
-    main()
+    print(json.dumps(run_all(), indent=2, sort_keys=True))
