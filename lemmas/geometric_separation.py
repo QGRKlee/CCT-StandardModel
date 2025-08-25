@@ -87,16 +87,16 @@ def check_geometric_separation(tol: float = 1e-9):
         "tol": float(tol),
     }
     return out
-def run_geometric_separation(tol: float = 1e-12):
-    out = check_geometric_separation(tol=tol)
-    # normalize a stable, machine‑parsable summary
+def check_geometric_separation(tol: float = 1e-12) -> dict:
+    ...
     return {
-        "orders_ok": bool(out.get("orders_ok", False)),
-        "passed_geometric_separation": bool(out.get("passed_geometric_separation", False)),
-        "max_comm_norm": float(out.get("max_comm_norm", float("inf"))),
-        "tol": float(out.get("tol", tol)),
-        "per_shell_comm_norms": out.get("per_shell_comm_norms", []),
+        "passed": bool(passed),
+        "tol": float(tol),
+        "per_shell_comm_norms": shell_stats,
+        "max_comm_norm": float(worst),
+        "orders_ok": bool(orders_ok),
     }
+
 
 if __name__ == "__main__":
     import json
