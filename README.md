@@ -1,231 +1,115 @@
-# Discrete Spinor Cycle Clocks in Spin(8): A Machine-Verified Embedding of the Standard Model Gauge Group from E₈ Geometry
+# Cyclic Group Actions on Division‑Algebra Lattices (Spin(8) → Spin(3))
 
-🌟 **Machine-verified implementation showing how the Standard Model gauge group emerges from discrete E₈ geometry**
+**Purpose.** This repository collects *machine‑verifiable* certificates and code for the paper:
 
-## 🎯 Overview
+**“Cyclic Group Actions on Division‑Algebra Lattices: Deriving the Standard Model from Spin(8) → Spin(3)”**
 
-This repository provides the complete computational verification for the research paper "Discrete Spinor Cycle Clocks in Spin(8): A Machine-Verified Embedding of the Standard-Model Gauge Group" by Klee Irwin, Marcelo Amaral, and Ray Aschheim.
+It organizes the proofs, data, and viewers used to certify theorems/lemmas about:
+- nested root systems: A1 ⊂ A2 ⊂ D4 ⊂ E8,
+- order‑2/3/4/5 clock operators on E8 (pointer/clicker),
+- stabilizer algebras inside Spin(8) (U(4), su(3), su(2), SU(2)^4),
+- semi‑conformal 8→3 projection invariants (Fibonacci Icosagrid / FIG),
+- angle spectra preservation and bipartite structures (4+4, 6+6, 5+5),
+- Spin(8) → Spin(3) spinor transport (Pauli/Dirac modules).
 
-**Core Innovation:** We demonstrate how the Standard Model gauge group SU(3)_C × SU(2)_L × U(1)_Y naturally emerges from the discrete geometry of the E₈ root system via a cycle-clock mechanism involving two commuting Clifford algebra operators.
+The repo contains: (i) **certificates** (human‑readable + machine logs), (ii) **code** (Python; HTML viewer), and (iii) a **Word‑safe draft** of the paper (ASCII symbols only).
 
-## 🔬 Breakthrough Result
 
-The Standard Model factors are geometrically separated by the E₈ shell structure, rather than requiring algebraic commutation in the embedding space. This provides a discrete-geometric foundation for particle physics symmetries, without compactification or explicit symmetry breaking.
-
-## 📊 Verification Results
-
-✅ **100% Machine Verification Achieved** (All commutators zero, dimensions match expectations)
-
-| Component | Status | Generators | Description |
-|-----------|--------|------------|-------------|
-| U(4) Stabilizer | ✅ | 16 | Stab(σ) = U(4) (complex structure) |
-| SU(3) Stabilizer | ✅ | 8 | Stab(S) = SU(3) (color symmetry) |
-| SU(2) Intersection | ✅ | 3 | Stab(σ) ∩ Stab(S) = SU(2) (weak) |
-| U(1)_Y | ✅ | 1 | Hypercharge center |
-| Standard Model | ✅ | 12 | 8 + 3 + 1 = 12 (full gauge group) |
-
-## 🌟 Verified Embedding Chain
+## Repo layout
 
 ```
-SU(3)_C × SU(2)_L × U(1)_Y ⊆ U(4) ⊆ Spin(8)
-     ↑                           ↑
-Standard Model              E₈ Geometry
-(geometrically separated)   (cycle-clock)
+.
+├── README.md
+├── LICENSE
+├── .gitignore
+├── paper/
+│   └── draft_word_safe.md
+├── proofs/
+│   ├── index.md
+│   ├── CERT-01_A1-A2-D4-E8_units/
+│   │   └── README.md
+│   ├── CERT-02_E8_into_ten_D4_shells/
+│   │   └── README.md
+│   ├── CERT-03_order5_pointer_two_5cycles/
+│   │   └── README.md
+│   ├── CERT-04_order4_clicker_Stab_is_U4_dim16/
+│   │   └── README.md
+│   ├── CERT-05_order2_swap_Stab_is_SU2x4/
+│   │   └── README.md
+│   ├── CERT-06_intersection_Stab_s_sigma_is_su2_dim3/
+│   │   └── README.md
+│   ├── CERT-07_angle_spectra_E8_D4_Eisenstein/
+│   │   └── README.md
+│   ├── CERT-08_FIG_4G_angle_spectrum_match/
+│   │   └── README.md
+│   ├── CERT-09_semi_conformal_projection_equivariance/
+│   │   └── README.md
+│   ├── CERT-10_Pauli_to_Dirac_pairing_in_Spin3/
+│   │   └── README.md
+│   ├── CERT-11_order2_Z_to_Eisenstein_subclock/
+│   │   └── README.md
+│   ├── CERT-12_SM_chain_SU3xSU2xU1_in_U4_in_Spin8/
+│   │   └── README.md
+│   ├── TODO-REM-01_order3_operator_u_su3_centralizer/
+│   │   └── SPEC.md
+│   ├── TODO-REM-02_simultaneous_stabilizers_u_s_sigma/
+│   │   └── SPEC.md
+│   ├── TODO-REM-03_equivariant_projection_certificate/
+│   │   └── SPEC.md
+│   ├── TODO-REM-04_russian_doll_hulls_from_true_FIG/
+│   │   └── SPEC.md
+│   └── TODO-REM-05_hypercharge_quantization_via_C5/
+│       └── SPEC.md
+└── code/
+    ├── requirements.txt
+    ├── python/
+    │   ├── e8_roots.py
+    │   ├── order_operators.py
+    │   ├── stabilizers.py
+    │   ├── angle_spectra.py
+    │   └── __init__.py
+    └── viewers/
+        └── nested_viewer_fixed.html
 ```
 
-## 🗂️ Repository Structure
+- **paper/** – ASCII/Word‑safe draft (we will later switch to LaTeX).
+- **proofs/** – one subfolder per certificate. `CERT-*` folders hold *ready* proofs; `TODO-REM-*` are the **five** remaining certifications to code.
+- **code/** – Python utilities + an interactive HTML viewer.
 
-```
-CCT-StandardModel/
-├── src/                    # Core Python implementation scripts
-│   ├── roots.py           # Generate and validate 240 E₈ roots
-│   ├── operators.py       # Construct cycle-clock operators S and σ
-│   ├── shells.py          # Partition into ten 24-cell shells
-│   ├── pairing_check.py   # Verify perpendicular shell partners
-│   ├── isoclinic.py       # Confirm 60° isoclinic rotations for chirality
-│   ├── stabilizer.py      # Compute and verify stabilizer algebras
-│   └── sm_embedding.py    # Extract Standard Model gauge groups
-├── data/                   # Generated output files (auto-created on run)
-│   ├── roots.json         # E₈ root coordinates
-│   ├── shell_*.npy        # Ten 24-cell shell arrays
-│   ├── partners.npy       # Shell pairing data
-│   ├── *_generators.npy   # Stabilizer and SM Lie algebra generators
-│   └── standard_model_algebra.npy  # Full SM algebra
-├── CCT_SM_Notebook.ipynb  # Integrated Jupyter notebook for end-to-end run
-├── requirements.txt       # Python dependencies
-└── README.md              # This documentation
-```
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-Install dependencies (Python 3.8+ required):
+## Reproducibility quickstart
 
 ```bash
-pip install -r requirements.txt
+# Python 3.10+ recommended
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install -r code/requirements.txt
+# (Planned) run specific proof scripts, e.g.:
+# python -m code.python.stabilizers --proof CERT-04
 ```
 
-*Contents of requirements.txt: numpy scipy sympy matplotlib*
+### HTML viewer
+Open **code/viewers/nested_viewer_fixed.html** in any modern browser (double click). It renders the cuboctahedron hull with two concentric octahedra and runs strict half‑space checks.
 
-No internet access needed beyond initial install—all computations are local.
+## How to publish to GitHub
 
-### Run the Verification Pipeline
+**Option A — Web UI (fastest)**
+1. Create a new GitHub repo (e.g., `cct-sm-spin8`). Leave it empty.
+2. Click **“Add file → Upload files”** and drag the *contents* of this folder in.
+3. Commit to `main` (or `master`).
 
-Execute scripts in sequence from `src/`:
-
+**Option B — Command line**
 ```bash
-cd src
-
-# 1. Generate E₈ roots
-python roots.py
-
-# 2. Build operators S and σ
-python operators.py
-
-# 3. Partition roots into shells
-python shells.py
-
-# 4. Check perpendicular pairings
-python pairing_check.py
-
-# 5. Verify isoclinic rotations and chirality
-python isoclinic.py
-
-# 6. Compute stabilizers
-python stabilizer.py
-
-# 7. Extract Standard Model groups
-python sm_embedding.py
+cd /path/to/cct-sm-spin8-repo
+git init
+git add .
+git commit -m "Initial commit: proofs scaffolding + viewer"
+git branch -M main
+git remote add origin https://github.com/YOUR-ORG-OR-USER/cct-sm-spin8.git
+git push -u origin main
 ```
 
-Alternatively, run the integrated Jupyter notebook:
+After you push, **please send me the GitHub link**. I’ll wire it into the draft and the “Data/Code Availability” section.
 
-```bash
-jupyter notebook CCT_SM_Notebook.ipynb
-```
+## License
+See `LICENSE` (placeholder). We can switch to Apache‑2.0/MIT on your instruction.
 
-### Expected Output
-
-- **Roots:** 240 validated E₈ vectors
-- **Shells:** 10 disjoint 24-cells (total 240 roots)
-- **Pairings:** Unique perpendicular partners (e.g., shell 0 ↔ 5)
-- **Stabilizers:** All generators commute; dimensions match table above
-- **SM Extraction:** 12 generators with correct charges/tracelessness
-- **Final:** "🎉 THEOREM 6.1 VERIFIED!" and SM chain confirmed
-
-## 🔬 Core Mathematical Framework
-
-### Cycle-Clock Operators
-
-Two commuting elements in Spin(8):
-
-**S (Fast Pointer):** Order-5, 72° isoclinic rotation in planes (0,4), (1,5), (2,6), (3,7).
-
-```python
-theta = 2 * np.pi / 5  # 72°
-```
-
-**σ (Slow Clicker):** Order-4, 90° isoclinic rotation in same planes (induces ℝ⁸ ≅ ℂ⁴).
-
-### Ten-Shell Decomposition
-
-240 E₈ roots → 10 disjoint 24-cells (D₄ subsystems), approximating Hopf fibration S³ → S⁷ → S⁴:
-
-- **Λ₀:** Roots with last 4 coords = 0
-- **Λ₁₋₄:** S^k (Λ₀)
-- **Λ₅:** σ (Λ₀)
-- **Λ₆₋₉:** S^k (Λ₅)
-
-### Perpendicular Pairing and Chirality
-
-- **Unique partners:** Λ_k ↔ Λ_{k+5} (mod 10)
-- **σ maps** with 90° algebraic rotation
-- **Geometric separation:** 60° isoclinic angle in E₈ structure (verified empirically as ~90° in code projections; aligns with paper's theoretical 60° via 3-sphere projection)
-
-### Stabilizer Algebras (Theorem 6.1)
-
-- **Stab(σ) = U(4):** 16 generators
-- **Stab(S) = SU(3):** 8 generators
-- **Intersection = SU(2):** 3 generators
-
-## 🎯 Physical Interpretation
-
-### Gauge Group Emergence
-
-- **SU(3)_C (Color):** From Stab(S); acts on z₀,z₁,z₂ (quark colors, 8 gluons)
-- **SU(2)_L (Weak):** From intersection; left-handed via chirality twist (W⁺,W⁻,Z)
-- **U(1)_Y (Hypercharge):** U(4) center; diag(1/3,1/3,1/3,-1) (B boson)
-
-### Geometric Insights
-
-- **No Algebraic Commutation Needed:** Factors separated by discrete shells
-- **Chirality:** Intrinsic from ±60°/90° twists in perpendicular pairs
-- **Embedding:** SU(3)_C × SU(2)_L × U(1)_Y ⊆ U(4) ⊆ Spin(8), unique up to conjugation (Theorem 7.1)
-
-## 📁 Generated Data Files
-
-- **Operators:** S_matrix.json, sigma_matrix.json (vector); S_spin.npy, sigma_spin.npy (spinor)
-- **Geometry:** roots.json (240 roots); shell_*.npy (24x8 arrays); partners.npy (pairings)
-- **Algebras:** stab_generators.npy (U(4)/SU(3)/SU(2)); su3_color, su2_left_, u1_hypercharge_.npy
-- **SM:** standard_model_algebra.npy (12x8x8 array)
-
-## 🔍 Key Verification Points
-
-### E₈ Roots:
-```python
-assert len(roots) == 240
-assert all(norm_squared == 2 for root in roots)
-```
-
-### Shells:
-```python
-assert len(shells) == 10 and all(len(shell) == 24 for shell in shells)
-```
-
-### Pairings/Chirality:
-```python
-assert rotation_angle ≈ 90.0  # Algebraic; geometric ~60° per paper
-```
-
-### Stabilizers:
-```python
-assert all(commutator_norm < 1e-10 for gen in generators)
-```
-
-### SM:
-```python
-assert np.allclose(Y_diag, [1/3, 1/3, 1/3, -1, ...])
-```
-
-## 📚 Mathematical Background
-
-- **Spin(8)/Clifford:** Rotations in 8D; generators e_i e_j = -e_j e_i
-- **E₈ Roots:** 240 vectors of length √2 (Type I/II)
-- **Isoclinic Rotations:** Uniform angle in orthogonal planes
-- **24-Cells:** 4D polytopes as D₄ roots
-- **Hopf Fibration:** Discrete analog S³ → S⁷ → S⁴
-
-## 📖 Citation
-
-Cite the paper and repo:
-
-```bibtex
-@article{irwin2024discrete,
-  title={Discrete Spinor Cycle Clocks in Spin(8): A Machine-Verified Embedding of the Standard-Model Gauge Group},
-  author={Irwin, Klee and Amaral, Marcelo and Aschheim, Ray},
-  journal={arXiv preprint [or Journal]},
-  year={2025},
-  note={Code: https://github.com/QGRKlee/CCT-StandardModel}
-}
-```
-
-## 📄 License
-
-MIT License - See LICENSE file for details.
-
-## 🙏 Acknowledgments
-
-Built on collaboration at Quantum Gravity Research. Thanks to open-source tools (NumPy, SciPy, SymPy) for enabling precise verification.
-
----

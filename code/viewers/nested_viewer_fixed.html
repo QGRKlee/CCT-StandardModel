@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Nested Cuboctahedron + Two Octahedra (machine checks)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <style>
+    html, body { height:100%; margin:0; background:#0b0e12; color:#e6eefc; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
+    #app { position:fixed; inset:0; }
+    #hud { position: fixed; top: 12px; left: 12px; z-index: 10; background: rgba(20,26,33,0.7); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 10px 12px; line-height: 1.35; min-width: 320px; }
+    #hud .row { display:flex; gap:8px; align-items:center; margin:3px 0; }
+    #hud .dot { width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:6px; }
+    #hud .pass { background:#00d084; }  #hud .fail { background:#ff5a5f; }
+    #hud code { color:#a7e1ff; }
+    .slider { -webkit-appearance: none; appearance: none; height: 4px; background: #2a3340; outline: none; border-radius: 999px; }
+    .slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #7ab9ff; cursor: pointer; }
+    .legend { position: fixed; bottom: 14px; left: 14px; z-index: 10; background: rgba(20,26,33,0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 8px 10px; display:flex; gap:12px; align-items:center; }
+    .chip { display:flex; align-items:center; gap:6px; }
+    .chip .swatch { width:12px; height:12px; border-radius:3px; border:1px solid rgba(0,0,0,0.3); }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="hud">
+    <div style="font-weight:600; margin-bottom:6px;">Diagnostics</div>
+    <div class="row"><span class="dot" id="chkHull"></span><div>Convex hull from 12 cubocta vertices (<span id="hullMsg">checking…</span>)</div></div>
+    <div class="row"><span class="dot" id="chkInside1"></span><div>Octahedron R=<code id="r1">0.99</code> inside hull (<span id="insideMsg1">checking…</span>)</div></div>
+    <div class="row"><span class="dot" id="chkInside2"></span><div>Octahedron R=<code id="r2">0.60</code> inside hull (<span id="insideMsg2">checking…</span>)</div></div>
+    <div class="row" style="margin-top:6px;">
+      <div style="min-width:140px;">Camera Z (distance):</div>
+      <input id="camZ" type="range" min="4" max="14" step="0.1" class="slider" />
+      <div style="width:64px; text-align:right;"><code id="camZVal">8.0</code></div>
+    </div>
+    <div class="row">
+      <div style="min-width:140px;">FOV (deg):</div>
+      <input id="fov" type="range" min="25" max="80" step="1" class="slider" />
+      <div style="width:64px; text-align:right;"><code id="fovVal">45</code></div>
+    </div>
+    <div class="row"><label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input id="wire" type="checkbox" /> Show edges / wireframes</label></div>
+  </div>
+  <div class="legend">
+    <div class="chip"><span class="swatch" style="background:#6fd6ff;"></span> Cuboctahedron</div>
+    <div class="chip"><span class="swatch" style="background:#9aff6f;"></span> Octahedron (R=0.99)</div>
+    <div class="chip"><span class="swatch" style="background:#ff7ac7;"></span> Octahedron (R=0.60)</div>
+  </div>
+
+  <script type="module">
+    import * as THREE from "three";
+    import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+    import { ConvexGeometry } from "three/addons/geometries/ConvexGeometry.js";
+    import { ConvexHull } from "three/addons/math/ConvexHull.js";
+
+    const app = document.getElementById("app");
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0b0e12);
+
+    const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.01, 1000);
+    camera.position.set(0.9, 1.2, 8.0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(2, devicePixelRatio));
+    renderer.setSize(innerWidth, innerHeight);
+    app.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true; controls.dampingFactor = 0.06;
+
+    scene.add(new THREE.HemisphereLight(0xcfe8ff, 0x101318, 0.9));
+    const dir = new THREE.DirectionalLight(0xffffff, 0.9); dir.position.set(5,6,8); scene.add(dir);
+
+    const axes = new THREE.AxesHelper(2.2);
+    axes.material.depthTest = false; axes.material.transparent = true; axes.material.opacity = 0.25;
+    scene.add(axes);
+
+    // Cuboctahedron vertices: permutations of (±1, ±1, 0)
+    const cuboctaVerts = [];
+    const signs = [+1, -1];
+    const perms = [[0,1,2],[0,2,1],[1,2,0]];
+    for (const [a,b,c] of perms) {
+      for (const sx of signs) for (const sy of signs) {
+        const v = [0,0,0]; v[a]=sx; v[b]=sy; v[c]=0;
+        cuboctaVerts.push(new THREE.Vector3(v[0], v[1], v[2]));
+      }
+    }
+
+    const cuboGeom = new ConvexGeometry(cuboctaVerts);
+    const cuboMat = new THREE.MeshPhysicalMaterial({ color: 0x6fd6ff, transmission: 0.15, transparent: true, roughness: 0.35, metalness: 0.1, thickness: 0.5, clearcoat: 0.6, clearcoatRoughness: 0.4, side: THREE.DoubleSide });
+    const cuboMesh = new THREE.Mesh(cuboGeom, cuboMat); scene.add(cuboMesh);
+    const cuboEdges = new THREE.LineSegments(new THREE.EdgesGeometry(cuboGeom, 10), new THREE.LineBasicMaterial({ color: 0x439bc0, transparent: true, opacity: 0.85 }));
+    cuboEdges.visible = false; scene.add(cuboEdges);
+
+    // Two octahedra (strictly inside: 0.99 and 0.60 < sqrt(2)≈1.414)
+    const r1 = 0.99, r2 = 0.60;
+    const oct1 = new THREE.Mesh(new THREE.OctahedronGeometry(r1, 0), new THREE.MeshPhysicalMaterial({ color: 0x9aff6f, transmission: 0.05, transparent: true, roughness: 0.25, metalness: 0.0, thickness: 0.45, side: THREE.DoubleSide }));
+    const oct2 = new THREE.Mesh(new THREE.OctahedronGeometry(r2, 0), new THREE.MeshPhysicalMaterial({ color: 0xff7ac7, transmission: 0.08, transparent: true, roughness: 0.35, metalness: 0.0, thickness: 0.35, side: THREE.DoubleSide }));
+    scene.add(oct1, oct2);
+    const oct1Edges = new THREE.LineSegments(new THREE.EdgesGeometry(oct1.geometry), new THREE.LineBasicMaterial({ color: 0x5fbf4f, transparent: true, opacity: 0.95 }));
+    const oct2Edges = new THREE.LineSegments(new THREE.EdgesGeometry(oct2.geometry), new THREE.LineBasicMaterial({ color: 0xbb3e8f, transparent: true, opacity: 0.95 }));
+    oct1Edges.visible = false; oct2Edges.visible = false; scene.add(oct1Edges, oct2Edges);
+
+    // Convex hull planes for tests
+    const hull = new ConvexHull().setFromPoints(cuboctaVerts);
+    const hullPlanes = [];
+    hull.faces.forEach(face => {
+      const a = face.vertex, b = a.next, c = b.next;
+      hullPlanes.push(new THREE.Plane().setFromCoplanarPoints(a.point, b.point, c.point));
+    });
+
+    function vertsOf(geom) {
+      const pos = geom.attributes.position.array;
+      const list = [];
+      for (let i=0;i<pos.length;i+=3) list.push(new THREE.Vector3(pos[i], pos[i+1], pos[i+2]));
+      // Dedup
+      const uniq = []; const seen = new Set();
+      for (const v of list) {
+        const key = `${v.x.toFixed(6)},${v.y.toFixed(6)},${v.z.toFixed(6)}`;
+        if (!seen.has(key)) { seen.add(key); uniq.push(v); }
+      }
+      return uniq;
+    }
+    function strictlyInside(point, planes, eps=1e-6) {
+      for (const pl of planes) { const d = pl.distanceToPoint(point); if (d >= -eps) return false; }
+      return true;
+    }
+    function insideReport(geom, planes) {
+      const vs = vertsOf(geom); let ok = true, minMargin = +Infinity;
+      for (const v of vs) {
+        let worst = +Infinity;
+        for (const pl of planes) { const d = pl.distanceToPoint(v); worst = Math.min(worst, -d); }
+        minMargin = Math.min(minMargin, worst);
+        if (!strictlyInside(v, planes)) ok = false;
+      }
+      return { ok, minMargin };
+    }
+
+    // Machine checks
+    const hullIs12 = (new Set(cuboctaVerts.map(v=>v.toArray().join(',')))).size === 12;
+    const hullDot = document.getElementById('chkHull'); const hullMsg = document.getElementById('hullMsg');
+    hullDot.className = 'dot ' + (hullIs12 ? 'pass' : 'fail'); hullMsg.textContent = hullIs12 ? 'PASS' : 'FAIL';
+
+    const rep1 = insideReport(oct1.geometry, hullPlanes);
+    const rep2 = insideReport(oct2.geometry, hullPlanes);
+    function paint(idDot, idMsg, ok, margin) {
+      const d = document.getElementById(idDot), m = document.getElementById(idMsg);
+      d.className = 'dot ' + (ok ? 'pass' : 'fail'); m.textContent = (ok ? 'PASS' : 'FAIL') + ` (min margin ≈ ${margin.toFixed(3)})`;
+    }
+    paint('chkInside1','insideMsg1', rep1.ok, rep1.minMargin);
+    paint('chkInside2','insideMsg2', rep2.ok, rep2.minMargin);
+
+    // UI
+    const camZ = document.getElementById('camZ'); const camZVal = document.getElementById('camZVal');
+    const fov = document.getElementById('fov'); const fovVal = document.getElementById('fovVal');
+    const wire = document.getElementById('wire');
+    camZ.value = camera.position.z.toFixed(1); camZVal.textContent = camera.position.z.toFixed(1);
+    camZ.addEventListener('input', ()=>{ camera.position.z = parseFloat(camZ.value); camZVal.textContent = camera.position.z.toFixed(1); });
+    fov.value = camera.fov.toFixed(0); fovVal.textContent = camera.fov.toFixed(0);
+    fov.addEventListener('input', ()=>{ camera.fov = parseFloat(fov.value); fovVal.textContent = camera.fov.toFixed(0); camera.updateProjectionMatrix(); });
+    wire.addEventListener('change', ()=>{
+      const on = wire.checked; cuboEdges.visible = on; oct1Edges.visible = on; oct2Edges.visible = on;
+      [cuboMesh.material, oct1.material, oct2.material].forEach(m => m.opacity = on ? 0.45 : 1.0);
+    });
+
+    function tick(){ controls.update(); renderer.render(scene, camera); requestAnimationFrame(tick); } tick();
+    addEventListener('resize', ()=>{ camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+  </script>
+</body>
+</html>
