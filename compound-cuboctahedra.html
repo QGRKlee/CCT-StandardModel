@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chiral 4-Groups with Cyclic Permutations</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #1a1a2e;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+            overflow: hidden;
+        }
+        #container { display: flex; height: 100vh; }
+        #canvas { flex: 1; display: block; }
+        #sidebar {
+            width: 340px;
+            background: rgba(0,0,0,0.7);
+            padding: 15px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+        .panel {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 5px;
+        }
+        .panel-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #e63946;
+            font-size: 13px;
+        }
+        .slider-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 6px;
+            gap: 6px;
+        }
+        .slider-row label {
+            min-width: 60px;
+            font-size: 10px;
+        }
+        .slider-row input[type="range"] {
+            flex: 1;
+            height: 4px;
+        }
+        .slider-row .value {
+            min-width: 40px;
+            text-align: right;
+            font-size: 9px;
+            color: #aaa;
+        }
+        button {
+            background: #4a4a8a;
+            border: none;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10px;
+            transition: background 0.3s;
+            margin: 2px;
+        }
+        button:hover { background: #6a6aaa; }
+        button.active { background: #e63946; }
+        button.small { padding: 4px 8px; font-size: 9px; }
+        select {
+            background: #4a4a8a;
+            border: none;
+            color: white;
+            padding: 5px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10px;
+            width: 100%;
+        }
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+        .group-info {
+            font-size: 9px;
+            color: #aaa;
+            margin-top: 5px;
+            padding: 5px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 3px;
+        }
+        hr {
+            border: none;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            margin: 8px 0;
+        }
+        #frame-indicator {
+            font-size: 28px;
+            font-weight: bold;
+            text-align: center;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 5px;
+        }
+        .frame-right { color: #ff6b6b; }
+        .frame-left { color: #4ecdc4; }
+        .cycle-display {
+            font-family: monospace;
+            font-size: 14px;
+            text-align: center;
+            padding: 8px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 4px;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+        .cycle-display .current {
+            color: #ff6b6b;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .cycle-display .other {
+            color: #888;
+        }
+        .pair-selector {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 4px;
+            margin-bottom: 10px;
+        }
+        .pair-btn {
+            padding: 6px 4px;
+            font-size: 9px;
+            text-align: center;
+        }
+        .pair-btn.active {
+            background: #e63946;
+        }
+        .pair-btn.selected {
+            background: #2a9d8f;
+            border: 2px solid #e9c46a;
+        }
+        .pair-btn.active.selected {
+            background: #e63946;
+            border: 2px solid #e9c46a;
+        }
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            padding: 8px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 4px;
+        }
+        .quantity-selector label {
+            font-size: 10px;
+            color: #aaa;
+        }
+        .quantity-selector select {
+            width: auto;
+            padding: 4px 8px;
+        }
+        .selected-pairs-display {
+            font-size: 9px;
+            color: #e9c46a;
+            padding: 5px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 3px;
+            margin-bottom: 8px;
+            min-height: 20px;
+        }
+        .multi-cycle-display {
+            font-family: monospace;
+            font-size: 11px;
+            padding: 8px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 4px;
+            margin-bottom: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .multi-cycle-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+            padding: 3px 5px;
+            border-radius: 3px;
+        }
+        .multi-cycle-row.active-row {
+            background: rgba(230, 57, 70, 0.3);
+        }
+        .multi-cycle-row .pair-label {
+            min-width: 30px;
+            color: #e9c46a;
+            font-weight: bold;
+        }
+        .multi-cycle-row .cycle-seq {
+            color: #aaa;
+        }
+        .multi-cycle-row .cycle-seq .current {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+        .direction-btns {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        .direction-btns button {
+            flex: 1;
+            padding: 8px;
+            font-size: 11px;
+        }
+        .math-info {
+            font-size: 9px;
+            color: #aaa;
+            background: rgba(0,0,0,0.3);
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+        .math-info strong {
+            color: #4ecdc4;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <canvas id="canvas"></canvas>
+        <div id="sidebar">
+            <!-- Cycle Animation Panel -->
+            <div class="panel">
+                <div class="panel-title">Cyclic Group Permutations</div>
+
+                <div id="frame-indicator" class="frame-right">1</div>
+                <div id="cycle-display" class="cycle-display"></div>
+
+                <div style="margin-bottom: 10px;">
+                    <button id="playBtn" style="width: 60px;">Play</button>
+                    <button id="prevBtn">◀</button>
+                    <button id="nextBtn">▶</button>
+                    <button id="rotateToggle">Auto-Rotate</button>
+                </div>
+
+                <div class="slider-row">
+                    <label>Speed:</label>
+                    <input type="range" id="speed" min="100" max="2000" value="600">
+                    <span class="value" id="speed-val">600ms</span>
+                </div>
+
+                <hr>
+                <div class="quantity-selector">
+                    <label>Pairs to display:</label>
+                    <select id="pairQuantity">
+                        <option value="1">1 pair</option>
+                        <option value="2">2 pairs</option>
+                        <option value="3">3 pairs</option>
+                        <option value="4">4 pairs</option>
+                        <option value="6">6 pairs</option>
+                        <option value="12">All 12 pairs</option>
+                    </select>
+                    <button id="clearSelection" class="small">Clear</button>
+                </div>
+
+                <div style="font-size: 10px; margin-bottom: 5px; color: #aaa;">
+                    Select Cycle Pairs (click to add/remove):
+                </div>
+                <div class="pair-selector" id="pairSelector"></div>
+                <div class="selected-pairs-display" id="selectedPairsDisplay">Selected: P1</div>
+
+                <div id="multiCycleDisplay" class="multi-cycle-display"></div>
+
+                <div style="font-size: 10px; margin-bottom: 5px; color: #aaa;">Direction:</div>
+                <div class="direction-btns">
+                    <button id="dirForward" class="active">Forward →</button>
+                    <button id="dirReverse">← Reverse (Mirror)</button>
+                </div>
+
+                <hr>
+                <div style="font-size: 10px; margin-bottom: 5px; color: #aaa;">Chirality:</div>
+                <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+                    <button id="chiralRight" class="small active">Right-Handed</button>
+                    <button id="chiralLeft" class="small">Left-Handed</button>
+                </div>
+
+                <hr>
+                <div style="font-size: 10px; margin-bottom: 5px; color: #aaa;">Display Mode:</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px;">
+                    <button id="modeIsolate" class="small">Isolate</button>
+                    <button id="modeHighlight" class="small active">Highlight</button>
+                    <button id="modeAllColors" class="small">All Colors</button>
+                </div>
+
+                <div class="slider-row">
+                    <label>Inactive:</label>
+                    <input type="range" id="inactiveOpacity" min="0" max="100" value="40">
+                    <span class="value" id="inactiveOpacity-val">40%</span>
+                </div>
+
+                <div class="math-info">
+                    <strong>Mathematics:</strong><br>
+                    • 5! = 120 total permutations<br>
+                    • (5-1)! = 24 distinct cycles<br>
+                    • 24 ÷ 2 = <strong>12 bipartite pairs</strong><br>
+                    • Each pair: cycle + its reverse
+                </div>
+            </div>
+
+            <!-- View Panel -->
+            <div class="panel">
+                <div class="panel-title">View Options</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px;">
+                    <button id="showFacesBtn" class="active small">Faces</button>
+                    <button id="showEdgesBtn" class="active small">Edges</button>
+                    <button id="showCentroidBtn" class="active small">Center</button>
+                </div>
+                <div class="slider-row">
+                    <label>Edges:</label>
+                    <input type="range" id="edgeOpacity" min="0" max="100" value="70">
+                    <span class="value" id="edgeOpacity-val">70%</span>
+                </div>
+                <hr>
+                <select id="viewSelect">
+                    <option value="perspective">Perspective</option>
+                    <option value="top">Top</option>
+                    <option value="front">Front</option>
+                    <option value="side">Side</option>
+                    <option value="fivefold">5-Fold Axis</option>
+                </select>
+            </div>
+
+            <!-- Current Cycle Info -->
+            <div class="panel">
+                <div class="panel-title">Current Cycle Info</div>
+                <div id="cycleInfo" class="group-info"></div>
+            </div>
+        </div>
+    </div>
+    <div id="info">
+        <div>Cyclic 5-Group Permutations</div>
+        <div style="font-size:11px; margin-top:5px;">Space: play | ←→: step | ↑↓: cycle active | A: all | C: clear</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // === CYCLIC PERMUTATION MATH ===
+        // Generate all 24 distinct cycles of 5 elements
+        // We fix element 1 at position 0 and permute the rest
+        function generateAllCycles() {
+            const elements = [2, 3, 4, 5]; // Element 1 is fixed at start
+            const permutations = [];
+
+            function permute(arr, l = 0) {
+                if (l === arr.length - 1) {
+                    permutations.push([1, ...arr.slice()]);
+                    return;
+                }
+                for (let i = l; i < arr.length; i++) {
+                    [arr[l], arr[i]] = [arr[i], arr[l]];
+                    permute(arr, l + 1);
+                    [arr[l], arr[i]] = [arr[i], arr[l]];
+                }
+            }
+
+            permute(elements);
+            return permutations;
+        }
+
+        // Get the canonical form of a cycle (lowest rotation)
+        function canonicalCycle(cycle) {
+            let min = cycle.join(',');
+            let minCycle = cycle.slice();
+            for (let i = 1; i < cycle.length; i++) {
+                const rotated = [...cycle.slice(i), ...cycle.slice(0, i)];
+                const str = rotated.join(',');
+                if (str < min) {
+                    min = str;
+                    minCycle = rotated;
+                }
+            }
+            return minCycle;
+        }
+
+        // Reverse a cycle
+        function reverseCycle(cycle) {
+            return [cycle[0], ...cycle.slice(1).reverse()];
+        }
+
+        // Check if two cycles are the same (accounting for rotation)
+        function sameCycle(c1, c2) {
+            const can1 = canonicalCycle(c1).join(',');
+            const can2 = canonicalCycle(c2).join(',');
+            return can1 === can2;
+        }
+
+        // Generate the 12 bipartite pairs
+        function generateBipartitePairs() {
+            const allCycles = generateAllCycles();
+            const pairs = [];
+            const used = new Set();
+
+            for (const cycle of allCycles) {
+                const canKey = canonicalCycle(cycle).join(',');
+                if (used.has(canKey)) continue;
+
+                const reversed = reverseCycle(cycle);
+                const revCanKey = canonicalCycle(reversed).join(',');
+
+                // Mark both as used
+                used.add(canKey);
+                used.add(revCanKey);
+
+                pairs.push({
+                    forward: canonicalCycle(cycle),
+                    reverse: canonicalCycle(reversed),
+                    index: pairs.length
+                });
+            }
+
+            return pairs;
+        }
+
+        const cyclePairs = generateBipartitePairs();
+        console.log('Generated', cyclePairs.length, 'bipartite pairs');
+
+        // Current state
+        let selectedPairIndices = [0]; // Array of selected pair indices
+        let activePairPosition = 0; // Which selected pair is currently active (for highlighting)
+        let currentDirection = 'forward'; // 'forward' or 'reverse'
+        let currentChirality = 'right';
+        let currentFrame = 0;
+        let maxPairs = 1; // Maximum number of pairs that can be selected
+
+        // Get current cycle for a specific pair index
+        function getCycleForPair(pairIndex) {
+            const pair = cyclePairs[pairIndex];
+            return currentDirection === 'forward' ? pair.forward : pair.reverse;
+        }
+
+        // Get currently active cycle (the one being animated/highlighted)
+        function getCurrentCycle() {
+            if (selectedPairIndices.length === 0) return [1, 2, 3, 4, 5];
+            const activePairIndex = selectedPairIndices[activePairPosition % selectedPairIndices.length];
+            return getCycleForPair(activePairIndex);
+        }
+
+        // Get all active group numbers from all selected cycles at current frame
+        function getAllActiveGroups() {
+            const groups = new Set();
+            for (const pairIndex of selectedPairIndices) {
+                const cycle = getCycleForPair(pairIndex);
+                groups.add(cycle[currentFrame]);
+            }
+            return Array.from(groups);
+        }
+
+        // === GEOMETRY ===
+        let width, height;
+        let rotationX = 0.4;
+        let rotationY = 0.3;
+        let rotationZ = 0;
+        let zoom = 250;
+        let isDragging = false;
+        let lastMouseX, lastMouseY;
+        let isPlaying = false;
+        let autoRotate = false;
+        let animationInterval = null;
+
+        let showFaces = true;
+        let showEdges = true;
+        let showCentroid = true;
+        let edgeOpacity = 0.7;
+        let displayMode = 'highlight'; // 'isolate', 'highlight', 'allColors'
+        let inactiveOpacity = 0.4;
+
+        // Group colors for "All Colors" mode
+        const groupColors = [
+            [230, 57, 70],   // Red - Group 1
+            [78, 205, 196],  // Teal - Group 2
+            [255, 209, 102], // Yellow - Group 3
+            [118, 200, 147], // Green - Group 4
+            [181, 131, 255]  // Purple - Group 5
+        ];
+
+        const phi = (1 + Math.sqrt(5)) / 2;
+
+        const cuboctahedronVertices = [
+            [1, 1, 0], [1, -1, 0], [-1, 1, 0], [-1, -1, 0],
+            [1, 0, 1], [1, 0, -1], [-1, 0, 1], [-1, 0, -1],
+            [0, 1, 1], [0, 1, -1], [0, -1, 1], [0, -1, -1]
+        ];
+
+        const allTriangleFaces = [
+            [0, 4, 8], [0, 5, 9], [1, 4, 10], [1, 5, 11],
+            [2, 6, 8], [2, 7, 9], [3, 6, 10], [3, 7, 11]
+        ];
+
+        const rightFaceIndices = [0, 3, 5, 6];
+        const leftFaceIndices = [1, 2, 4, 7];
+
+        const centroid = [0, 0, 0];
+
+        function createRotationMatrix(axis, angle) {
+            const [x, y, z] = axis;
+            const len = Math.sqrt(x*x + y*y + z*z);
+            const nx = x/len, ny = y/len, nz = z/len;
+            const c = Math.cos(angle), s = Math.sin(angle), t = 1 - c;
+            return [
+                [t*nx*nx + c, t*nx*ny - s*nz, t*nx*nz + s*ny],
+                [t*nx*ny + s*nz, t*ny*ny + c, t*ny*nz - s*nx],
+                [t*nx*nz - s*ny, t*ny*nz + s*nx, t*nz*nz + c]
+            ];
+        }
+
+        function multiplyMatrixVector(m, v) {
+            return [
+                m[0][0]*v[0] + m[0][1]*v[1] + m[0][2]*v[2],
+                m[1][0]*v[0] + m[1][1]*v[1] + m[1][2]*v[2],
+                m[2][0]*v[0] + m[2][1]*v[1] + m[2][2]*v[2]
+            ];
+        }
+
+        const fiveFoldAxis = [0, 1, phi];
+        const fiveRotations = [];
+        for (let i = 0; i < 5; i++) {
+            fiveRotations.push(createRotationMatrix(fiveFoldAxis, (2 * Math.PI * i) / 5));
+        }
+
+        function generateFourGroup(fourGroupFaces, rotatedVertices) {
+            const tetrahedra = [];
+            for (const faceVerts of fourGroupFaces) {
+                const v0 = rotatedVertices[faceVerts[0]];
+                const v1 = rotatedVertices[faceVerts[1]];
+                const v2 = rotatedVertices[faceVerts[2]];
+
+                const faceCentroid = [
+                    (v0[0] + v1[0] + v2[0]) / 3,
+                    (v0[1] + v1[1] + v2[1]) / 3,
+                    (v0[2] + v1[2] + v2[2]) / 3
+                ];
+
+                const edge1 = [v1[0] - v0[0], v1[1] - v0[1], v1[2] - v0[2]];
+                const edge2 = [v2[0] - v0[0], v2[1] - v0[1], v2[2] - v0[2]];
+                const normal = [
+                    edge1[1] * edge2[2] - edge1[2] * edge2[1],
+                    edge1[2] * edge2[0] - edge1[0] * edge2[2],
+                    edge1[0] * edge2[1] - edge1[1] * edge2[0]
+                ];
+
+                const dot = normal[0] * faceCentroid[0] + normal[1] * faceCentroid[1] + normal[2] * faceCentroid[2];
+
+                let outerFace, innerFace1, innerFace2, innerFace3;
+                if (dot > 0) {
+                    outerFace = [0, 1, 2];
+                    innerFace1 = [1, 0, 3];
+                    innerFace2 = [2, 1, 3];
+                    innerFace3 = [0, 2, 3];
+                } else {
+                    outerFace = [0, 2, 1];
+                    innerFace1 = [0, 1, 3];
+                    innerFace2 = [1, 2, 3];
+                    innerFace3 = [2, 0, 3];
+                }
+
+                tetrahedra.push({
+                    vertices: [v0, v1, v2, centroid],
+                    faces: [outerFace, innerFace1, innerFace2, innerFace3],
+                    edges: [[0, 1], [1, 2], [2, 0], [0, 3], [1, 3], [2, 3]],
+                    outerFaceIndex: 0
+                });
+            }
+            return tetrahedra;
+        }
+
+        // Generate all 5 groups for each chirality
+        const rightGroups = [];
+        const leftGroups = [];
+
+        for (let g = 0; g < 5; g++) {
+            const rotMatrix = fiveRotations[g];
+            const rotatedVertices = cuboctahedronVertices.map(v => multiplyMatrixVector(rotMatrix, v));
+
+            const rightFaces = rightFaceIndices.map(i => allTriangleFaces[i]);
+            const leftFaces = leftFaceIndices.map(i => allTriangleFaces[i]);
+
+            rightGroups.push({
+                tetrahedra: generateFourGroup(rightFaces, rotatedVertices),
+                rotatedVertices: rotatedVertices,
+                groupIndex: g
+            });
+
+            leftGroups.push({
+                tetrahedra: generateFourGroup(leftFaces, rotatedVertices),
+                rotatedVertices: rotatedVertices,
+                groupIndex: g
+            });
+        }
+
+        function rotatePoint(p, rx, ry, rz) {
+            let [x, y, z] = p;
+            let y1 = y * Math.cos(rx) - z * Math.sin(rx);
+            let z1 = y * Math.sin(rx) + z * Math.cos(rx);
+            y = y1; z = z1;
+            let x1 = x * Math.cos(ry) + z * Math.sin(ry);
+            z1 = -x * Math.sin(ry) + z * Math.cos(ry);
+            x = x1; z = z1;
+            x1 = x * Math.cos(rz) - y * Math.sin(rz);
+            y1 = x * Math.sin(rz) + y * Math.cos(rz);
+            return [x1, y1, z1];
+        }
+
+        function project(p) {
+            const [x, y, z] = rotatePoint(p, rotationX, rotationY, rotationZ);
+            const perspective = 50;
+            const scale = zoom * perspective / (perspective + z);
+            return { x: width/2 + x * scale, y: height/2 - y * scale, z: z };
+        }
+
+        function calculateNormal(p1, p2, p3) {
+            const u = [p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2]];
+            const v = [p3[0] - p1[0], p3[1] - p1[1], p3[2] - p1[2]];
+            return [
+                u[1] * v[2] - u[2] * v[1],
+                u[2] * v[0] - u[0] * v[2],
+                u[0] * v[1] - u[1] * v[0]
+            ];
+        }
+
+        // Color palette for multiple pairs
+        const pairColors = [
+            [230, 57, 70],   // Red
+            [78, 205, 196],  // Teal
+            [255, 209, 102], // Yellow
+            [118, 200, 147], // Green
+            [255, 154, 162], // Pink
+            [181, 131, 255], // Purple
+            [255, 183, 77],  // Orange
+            [100, 181, 246], // Light Blue
+            [174, 213, 129], // Light Green
+            [255, 138, 128], // Coral
+            [149, 117, 205], // Violet
+            [77, 208, 225]   // Cyan
+        ];
+
+        function draw() {
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, width, height);
+
+            const allGroups = currentChirality === 'right' ? rightGroups : leftGroups;
+            const drawables = [];
+
+            // Determine which groups are active from all selected pairs
+            const activeGroupIndices = new Set();
+            const primaryGroupIndex = getCurrentCycle()[currentFrame] - 1;
+
+            for (const pairIndex of selectedPairIndices) {
+                const cycle = getCycleForPair(pairIndex);
+                activeGroupIndices.add(cycle[currentFrame] - 1);
+            }
+
+            // Determine which groups to draw based on display mode
+            let groupsToDraw = [];
+            if (displayMode === 'isolate') {
+                // Only draw active groups
+                for (const idx of activeGroupIndices) {
+                    groupsToDraw.push({ groupIndex: idx, isActive: true, isPrimary: idx === primaryGroupIndex });
+                }
+            } else {
+                // Draw all 5 groups
+                for (let g = 0; g < 5; g++) {
+                    const isActive = activeGroupIndices.has(g);
+                    groupsToDraw.push({ groupIndex: g, isActive, isPrimary: g === primaryGroupIndex });
+                }
+            }
+
+            // Draw all groups
+            for (const { groupIndex, isActive, isPrimary } of groupsToDraw) {
+                const group = allGroups[groupIndex];
+
+                // Determine color based on display mode
+                let color;
+                let opacity = 1.0;
+
+                if (displayMode === 'isolate') {
+                    color = isPrimary ? [230, 57, 70] : groupColors[groupIndex];
+                } else if (displayMode === 'highlight') {
+                    if (isActive) {
+                        color = isPrimary ? [230, 57, 70] : groupColors[groupIndex];
+                    } else {
+                        color = [255, 255, 255]; // White for inactive
+                        opacity = inactiveOpacity;
+                    }
+                } else { // allColors
+                    color = groupColors[groupIndex];
+                    if (!isActive) {
+                        opacity = inactiveOpacity;
+                    }
+                }
+
+            for (const tetra of group.tetrahedra) {
+                for (let f = 0; f < tetra.faces.length; f++) {
+                    const faceIndices = tetra.faces[f];
+                    const isOuterFace = f === tetra.outerFaceIndex;
+
+                    const worldVerts = faceIndices.map(i => tetra.vertices[i]);
+                    const rotatedVerts = worldVerts.map(v => rotatePoint(v, rotationX, rotationY, rotationZ));
+
+                    let centerZ = rotatedVerts.reduce((sum, v) => sum + v[2], 0) / 3;
+                    const normal = calculateNormal(rotatedVerts[0], rotatedVerts[1], rotatedVerts[2]);
+                    const projectedVerts = worldVerts.map(v => project(v));
+
+                    const lightDir = [0.3, 0.5, 1];
+                    const lenN = Math.sqrt(normal[0]**2 + normal[1]**2 + normal[2]**2);
+                    const lenL = Math.sqrt(lightDir[0]**2 + lightDir[1]**2 + lightDir[2]**2);
+                    const dot = (normal[0]*lightDir[0] + normal[1]*lightDir[1] + normal[2]*lightDir[2]) / (lenN * lenL);
+                    const shade = 0.4 + 0.6 * Math.abs(dot);
+
+                    drawables.push({
+                        type: 'face', projectedVerts, centerZ, shade, color, isOuterFace, opacity
+                    });
+                }
+
+                if (showEdges) {
+                    for (const [i1, i2] of tetra.edges) {
+                        const v1 = tetra.vertices[i1];
+                        const v2 = tetra.vertices[i2];
+                        const isCentroidEdge = i1 === 3 || i2 === 3;
+                        const rotV1 = rotatePoint(v1, rotationX, rotationY, rotationZ);
+                        const rotV2 = rotatePoint(v2, rotationX, rotationY, rotationZ);
+                        const avgZ = (rotV1[2] + rotV2[2]) / 2;
+
+                        drawables.push({
+                            type: 'edge', p1: project(v1), p2: project(v2),
+                            centerZ: avgZ, color, isCentroidEdge, opacity
+                        });
+                    }
+                }
+            }
+            } // End of groupsToDraw loop
+
+            drawables.sort((a, b) => a.centerZ - b.centerZ);
+
+            for (const d of drawables) {
+                const op = d.opacity !== undefined ? d.opacity : 1.0;
+
+                if (d.type === 'face' && showFaces) {
+                    ctx.beginPath();
+                    ctx.moveTo(d.projectedVerts[0].x, d.projectedVerts[0].y);
+                    for (let i = 1; i < d.projectedVerts.length; i++) {
+                        ctx.lineTo(d.projectedVerts[i].x, d.projectedVerts[i].y);
+                    }
+                    ctx.closePath();
+
+                    let r = Math.round(d.color[0] * d.shade);
+                    let g = Math.round(d.color[1] * d.shade);
+                    let b = Math.round(d.color[2] * d.shade);
+
+                    if (d.isOuterFace) {
+                        r = Math.min(255, r + 25);
+                        g = Math.min(255, g + 25);
+                        b = Math.min(255, b + 25);
+                    }
+
+                    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${op})`;
+                    ctx.fill();
+
+                    if (edgeOpacity > 0) {
+                        ctx.strokeStyle = `rgba(${Math.min(255, r+40)}, ${Math.min(255, g+40)}, ${Math.min(255, b+40)}, ${edgeOpacity * op})`;
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    }
+                } else if (d.type === 'edge' && showEdges) {
+                    ctx.beginPath();
+                    ctx.moveTo(d.p1.x, d.p1.y);
+                    ctx.lineTo(d.p2.x, d.p2.y);
+
+                    if (d.isCentroidEdge) {
+                        ctx.strokeStyle = `rgba(255, 255, 200, ${edgeOpacity * 0.6 * op})`;
+                        ctx.lineWidth = 1;
+                    } else {
+                        ctx.strokeStyle = `rgba(${d.color[0]}, ${d.color[1]}, ${d.color[2]}, ${edgeOpacity * op})`;
+                        ctx.lineWidth = 1.5;
+                    }
+                    ctx.stroke();
+                }
+            }
+
+            if (showCentroid) {
+                const centroidProj = project(centroid);
+                ctx.beginPath();
+                ctx.arc(centroidProj.x, centroidProj.y, 5, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 0, 0.9)';
+                ctx.fill();
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+
+        function updateUI() {
+            const allActiveGroups = getAllActiveGroups();
+
+            // Frame indicator - show all active groups
+            const indicator = document.getElementById('frame-indicator');
+            indicator.textContent = allActiveGroups.join(', ');
+            indicator.className = currentChirality === 'right' ? 'frame-right' : 'frame-left';
+
+            // Primary cycle display (for the active pair)
+            const cycle = getCurrentCycle();
+            const cycleDisplay = document.getElementById('cycle-display');
+            let html = '';
+            for (let i = 0; i < cycle.length; i++) {
+                if (i === currentFrame) {
+                    html += `<span class="current">${cycle[i]}</span>`;
+                } else {
+                    html += `<span class="other">${cycle[i]}</span>`;
+                }
+                if (i < cycle.length - 1) html += ' → ';
+            }
+            html += ' → <span class="other">(' + cycle[0] + ')</span>';
+            cycleDisplay.innerHTML = html;
+
+            // Multi-cycle display showing all selected pairs
+            const multiDisplay = document.getElementById('multiCycleDisplay');
+            let multiHtml = '';
+            for (let i = 0; i < selectedPairIndices.length; i++) {
+                const pairIdx = selectedPairIndices[i];
+                const pairCycle = getCycleForPair(pairIdx);
+                const isActive = (i === activePairPosition % selectedPairIndices.length);
+                const colorIdx = pairIdx % pairColors.length;
+                const color = pairColors[colorIdx];
+
+                multiHtml += `<div class="multi-cycle-row ${isActive ? 'active-row' : ''}">`;
+                multiHtml += `<span class="pair-label" style="color: rgb(${color.join(',')})">P${pairIdx + 1}:</span>`;
+                multiHtml += '<span class="cycle-seq">';
+                for (let j = 0; j < pairCycle.length; j++) {
+                    if (j === currentFrame) {
+                        multiHtml += `<span class="current">${pairCycle[j]}</span>`;
+                    } else {
+                        multiHtml += pairCycle[j];
+                    }
+                    if (j < pairCycle.length - 1) multiHtml += '→';
+                }
+                multiHtml += '</span></div>';
+            }
+            multiDisplay.innerHTML = multiHtml;
+
+            // Selected pairs display
+            const selectedDisplay = document.getElementById('selectedPairsDisplay');
+            selectedDisplay.textContent = 'Selected: ' + selectedPairIndices.map(i => 'P' + (i + 1)).join(', ');
+
+            // Cycle info
+            const activePairIndex = selectedPairIndices[activePairPosition % selectedPairIndices.length] || 0;
+            const pair = cyclePairs[activePairIndex];
+            const cycleInfo = document.getElementById('cycleInfo');
+            cycleInfo.innerHTML = `
+                <strong>Active: Pair ${activePairIndex + 1} of 12</strong><br>
+                Forward: ${pair.forward.join(' → ')}<br>
+                Reverse: ${pair.reverse.join(' → ')}<br><br>
+                Selected: <strong>${selectedPairIndices.length} pair(s)</strong><br>
+                Direction: <strong>${currentDirection}</strong><br>
+                Chirality: <strong>${currentChirality}</strong><br>
+                Step: ${currentFrame + 1} of 5
+            `;
+
+            // Update pair selector buttons
+            document.querySelectorAll('.pair-btn').forEach((btn, idx) => {
+                btn.classList.toggle('selected', selectedPairIndices.includes(idx));
+                btn.classList.toggle('active', idx === activePairIndex);
+            });
+        }
+
+        function buildPairSelector() {
+            const container = document.getElementById('pairSelector');
+            container.innerHTML = '';
+
+            for (let i = 0; i < cyclePairs.length; i++) {
+                const btn = document.createElement('button');
+                const isSelected = selectedPairIndices.includes(i);
+                const isActive = selectedPairIndices.length > 0 &&
+                    i === selectedPairIndices[activePairPosition % selectedPairIndices.length];
+                btn.className = 'pair-btn small' +
+                    (isSelected ? ' selected' : '') +
+                    (isActive ? ' active' : '');
+                btn.textContent = `P${i + 1}`;
+                btn.title = cyclePairs[i].forward.join('→');
+                btn.onclick = () => togglePairSelection(i);
+                container.appendChild(btn);
+            }
+        }
+
+        function togglePairSelection(pairIndex) {
+            const idx = selectedPairIndices.indexOf(pairIndex);
+
+            if (idx !== -1) {
+                // Already selected - remove it (unless it's the last one)
+                if (selectedPairIndices.length > 1) {
+                    selectedPairIndices.splice(idx, 1);
+                    if (activePairPosition >= selectedPairIndices.length) {
+                        activePairPosition = 0;
+                    }
+                }
+            } else {
+                // Not selected - add it if under max
+                if (selectedPairIndices.length < maxPairs) {
+                    selectedPairIndices.push(pairIndex);
+                    selectedPairIndices.sort((a, b) => a - b);
+                } else if (maxPairs === 1) {
+                    // Single selection mode - replace
+                    selectedPairIndices = [pairIndex];
+                    activePairPosition = 0;
+                }
+            }
+
+            currentFrame = 0;
+            buildPairSelector();
+            updateUI();
+        }
+
+        function setMaxPairs(num) {
+            maxPairs = num;
+            // Trim selection if needed
+            while (selectedPairIndices.length > maxPairs) {
+                selectedPairIndices.pop();
+            }
+            if (activePairPosition >= selectedPairIndices.length) {
+                activePairPosition = 0;
+            }
+            buildPairSelector();
+            updateUI();
+        }
+
+        function clearSelection() {
+            selectedPairIndices = [0];
+            activePairPosition = 0;
+            currentFrame = 0;
+            buildPairSelector();
+            updateUI();
+        }
+
+        function selectAllPairs() {
+            selectedPairIndices = [];
+            for (let i = 0; i < Math.min(maxPairs, 12); i++) {
+                selectedPairIndices.push(i);
+            }
+            activePairPosition = 0;
+            currentFrame = 0;
+            buildPairSelector();
+            updateUI();
+        }
+
+        function resize() {
+            width = canvas.width = window.innerWidth - 340;
+            height = canvas.height = window.innerHeight;
+            draw();
+        }
+
+        function animate() {
+            if (autoRotate) rotationY += 0.005;
+            draw();
+            requestAnimationFrame(animate);
+        }
+
+        function nextFrame() {
+            currentFrame = (currentFrame + 1) % 5;
+            updateUI();
+        }
+
+        function prevFrame() {
+            currentFrame = (currentFrame - 1 + 5) % 5;
+            updateUI();
+        }
+
+        function startAnimation() {
+            if (animationInterval) clearInterval(animationInterval);
+            const speed = parseInt(document.getElementById('speed').value);
+            animationInterval = setInterval(nextFrame, speed);
+            isPlaying = true;
+            document.getElementById('playBtn').textContent = 'Pause';
+            document.getElementById('playBtn').classList.add('active');
+        }
+
+        function stopAnimation() {
+            if (animationInterval) {
+                clearInterval(animationInterval);
+                animationInterval = null;
+            }
+            isPlaying = false;
+            document.getElementById('playBtn').textContent = 'Play';
+            document.getElementById('playBtn').classList.remove('active');
+        }
+
+        // Event listeners
+        document.getElementById('playBtn').addEventListener('click', () => {
+            if (isPlaying) stopAnimation();
+            else startAnimation();
+        });
+
+        document.getElementById('prevBtn').addEventListener('click', prevFrame);
+        document.getElementById('nextBtn').addEventListener('click', nextFrame);
+
+        document.getElementById('speed').addEventListener('input', (e) => {
+            document.getElementById('speed-val').textContent = e.target.value + 'ms';
+            if (isPlaying) startAnimation();
+        });
+
+        document.getElementById('rotateToggle').addEventListener('click', () => {
+            autoRotate = !autoRotate;
+            document.getElementById('rotateToggle').classList.toggle('active', autoRotate);
+        });
+
+        // Quantity selector
+        document.getElementById('pairQuantity').addEventListener('change', (e) => {
+            const num = parseInt(e.target.value);
+            setMaxPairs(num);
+            if (num > 1 && selectedPairIndices.length === 1) {
+                // Auto-select first N pairs when increasing quantity
+                selectAllPairs();
+            }
+        });
+
+        document.getElementById('clearSelection').addEventListener('click', clearSelection);
+
+        document.getElementById('dirForward').addEventListener('click', () => {
+            currentDirection = 'forward';
+            currentFrame = 0;
+            document.getElementById('dirForward').classList.add('active');
+            document.getElementById('dirReverse').classList.remove('active');
+            updateUI();
+        });
+
+        document.getElementById('dirReverse').addEventListener('click', () => {
+            currentDirection = 'reverse';
+            currentFrame = 0;
+            document.getElementById('dirReverse').classList.add('active');
+            document.getElementById('dirForward').classList.remove('active');
+            updateUI();
+        });
+
+        document.getElementById('chiralRight').addEventListener('click', () => {
+            currentChirality = 'right';
+            document.getElementById('chiralRight').classList.add('active');
+            document.getElementById('chiralLeft').classList.remove('active');
+            updateUI();
+        });
+
+        document.getElementById('chiralLeft').addEventListener('click', () => {
+            currentChirality = 'left';
+            document.getElementById('chiralLeft').classList.add('active');
+            document.getElementById('chiralRight').classList.remove('active');
+            updateUI();
+        });
+
+        // Display mode buttons
+        document.getElementById('modeIsolate').addEventListener('click', () => {
+            displayMode = 'isolate';
+            document.getElementById('modeIsolate').classList.add('active');
+            document.getElementById('modeHighlight').classList.remove('active');
+            document.getElementById('modeAllColors').classList.remove('active');
+        });
+
+        document.getElementById('modeHighlight').addEventListener('click', () => {
+            displayMode = 'highlight';
+            document.getElementById('modeIsolate').classList.remove('active');
+            document.getElementById('modeHighlight').classList.add('active');
+            document.getElementById('modeAllColors').classList.remove('active');
+        });
+
+        document.getElementById('modeAllColors').addEventListener('click', () => {
+            displayMode = 'allColors';
+            document.getElementById('modeIsolate').classList.remove('active');
+            document.getElementById('modeHighlight').classList.remove('active');
+            document.getElementById('modeAllColors').classList.add('active');
+        });
+
+        document.getElementById('inactiveOpacity').addEventListener('input', (e) => {
+            inactiveOpacity = parseInt(e.target.value) / 100;
+            document.getElementById('inactiveOpacity-val').textContent = e.target.value + '%';
+        });
+
+        document.getElementById('showFacesBtn').addEventListener('click', (e) => {
+            showFaces = !showFaces;
+            e.target.classList.toggle('active', showFaces);
+        });
+
+        document.getElementById('showEdgesBtn').addEventListener('click', (e) => {
+            showEdges = !showEdges;
+            e.target.classList.toggle('active', showEdges);
+        });
+
+        document.getElementById('showCentroidBtn').addEventListener('click', (e) => {
+            showCentroid = !showCentroid;
+            e.target.classList.toggle('active', showCentroid);
+        });
+
+        document.getElementById('edgeOpacity').addEventListener('input', (e) => {
+            edgeOpacity = parseInt(e.target.value) / 100;
+            document.getElementById('edgeOpacity-val').textContent = e.target.value + '%';
+        });
+
+        document.getElementById('viewSelect').addEventListener('change', () => {
+            switch (document.getElementById('viewSelect').value) {
+                case 'top': rotationX = Math.PI / 2; rotationY = 0; rotationZ = 0; break;
+                case 'front': rotationX = 0; rotationY = 0; rotationZ = 0; break;
+                case 'side': rotationX = 0; rotationY = Math.PI / 2; rotationZ = 0; break;
+                case 'perspective': rotationX = 0.4; rotationY = 0.3; rotationZ = 0; break;
+                case 'fivefold':
+                    const axis = [0, 1, phi];
+                    const len = Math.sqrt(axis[0]**2 + axis[1]**2 + axis[2]**2);
+                    rotationX = Math.acos(axis[2] / len);
+                    rotationY = Math.atan2(axis[0], axis[1]);
+                    rotationZ = 0;
+                    break;
+            }
+        });
+
+        // Canvas interaction
+        canvas.addEventListener('mousedown', (e) => { isDragging = true; lastMouseX = e.clientX; lastMouseY = e.clientY; });
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                rotationY += (e.clientX - lastMouseX) * 0.01;
+                rotationX += (e.clientY - lastMouseY) * 0.01;
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+            }
+        });
+        canvas.addEventListener('mouseup', () => isDragging = false);
+        canvas.addEventListener('mouseleave', () => isDragging = false);
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            zoom *= e.deltaY > 0 ? 0.95 : 1.05;
+            zoom = Math.max(50, Math.min(500, zoom));
+        });
+
+        // Keyboard
+        document.addEventListener('keydown', (e) => {
+            switch (e.key) {
+                case ' ': e.preventDefault(); if (isPlaying) stopAnimation(); else startAnimation(); break;
+                case 'ArrowRight': nextFrame(); break;
+                case 'ArrowLeft': prevFrame(); break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    // Cycle through active pair (when multiple selected)
+                    if (selectedPairIndices.length > 1) {
+                        activePairPosition = (activePairPosition + 1) % selectedPairIndices.length;
+                    } else {
+                        // Add next pair to selection (if under max)
+                        const nextPair = (selectedPairIndices[selectedPairIndices.length - 1] + 1) % 12;
+                        if (selectedPairIndices.length < maxPairs && !selectedPairIndices.includes(nextPair)) {
+                            selectedPairIndices.push(nextPair);
+                            selectedPairIndices.sort((a, b) => a - b);
+                        }
+                    }
+                    buildPairSelector();
+                    updateUI();
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    // Cycle through active pair backwards
+                    if (selectedPairIndices.length > 1) {
+                        activePairPosition = (activePairPosition - 1 + selectedPairIndices.length) % selectedPairIndices.length;
+                    }
+                    buildPairSelector();
+                    updateUI();
+                    break;
+                case 'r': autoRotate = !autoRotate; document.getElementById('rotateToggle').classList.toggle('active', autoRotate); break;
+                case 'd':
+                    currentDirection = currentDirection === 'forward' ? 'reverse' : 'forward';
+                    document.getElementById('dirForward').classList.toggle('active', currentDirection === 'forward');
+                    document.getElementById('dirReverse').classList.toggle('active', currentDirection === 'reverse');
+                    updateUI();
+                    break;
+                case 'a':
+                    // Select all pairs up to max
+                    selectAllPairs();
+                    break;
+                case 'c':
+                    // Clear to single selection
+                    clearSelection();
+                    break;
+            }
+        });
+
+        // Init
+        window.addEventListener('resize', resize);
+        buildPairSelector();
+        resize();
+        animate();
+        updateUI();
+    </script>
+</body>
+</html>
