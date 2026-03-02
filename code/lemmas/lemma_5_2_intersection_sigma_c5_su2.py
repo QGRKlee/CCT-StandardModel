@@ -1,1 +1,0 @@
-lemma_5_2_intersection_sigma_c5_su2.py

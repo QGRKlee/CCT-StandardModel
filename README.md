@@ -1,115 +1,144 @@
-# Cyclic Group Actions on Division‑Algebra Lattices (Spin(8) → Spin(3))
+# Machine Verification Suite
+## Kinematic Spinors on Division-Algebra Root Systems
 
-**Purpose.** This repository collects *machine‑verifiable* certificates and code for the paper:
+**Paper:** "Kinematic Spinors on Division-Algebra Root Systems:
+A First-Principles Derivation of the Standard Model Weyl Group"
+— Klee Irwin (2026)
 
-**“Cyclic Group Actions on Division‑Algebra Lattices: Deriving the Standard Model from Spin(8) → Spin(3)”**
+This repository contains machine-verifiable proofs for all five theorems
+in the paper. Every computational claim prints `[PASS]` or `[FAIL]`;
+the suite exits 0 only if all claims pass.
 
-It organizes the proofs, data, and viewers used to certify theorems/lemmas about:
-- nested root systems: A1 ⊂ A2 ⊂ D4 ⊂ E8,
-- order‑2/3/4/5 clock operators on E8 (pointer/clicker),
-- stabilizer algebras inside Spin(8) (U(4), su(3), su(2), SU(2)^4),
-- semi‑conformal 8→3 projection invariants (Fibonacci Icosagrid / FIG),
-- angle spectra preservation and bipartite structures (4+4, 6+6, 5+5),
-- Spin(8) → Spin(3) spinor transport (Pauli/Dirac modules).
-
-The repo contains: (i) **certificates** (human‑readable + machine logs), (ii) **code** (Python; HTML viewer), and (iii) a **Word‑safe draft** of the paper (ASCII symbols only).
-
-
-## Repo layout
-
-```
-.
-├── README.md
-├── LICENSE
-├── .gitignore
-├── paper/
-│   └── draft_word_safe.md
-├── proofs/
-│   ├── index.md
-│   ├── CERT-01_A1-A2-D4-E8_units/
-│   │   └── README.md
-│   ├── CERT-02_E8_into_ten_D4_shells/
-│   │   └── README.md
-│   ├── CERT-03_order5_pointer_two_5cycles/
-│   │   └── README.md
-│   ├── CERT-04_order4_clicker_Stab_is_U4_dim16/
-│   │   └── README.md
-│   ├── CERT-05_order2_swap_Stab_is_SU2x4/
-│   │   └── README.md
-│   ├── CERT-06_intersection_Stab_s_sigma_is_su2_dim3/
-│   │   └── README.md
-│   ├── CERT-07_angle_spectra_E8_D4_Eisenstein/
-│   │   └── README.md
-│   ├── CERT-08_FIG_4G_angle_spectrum_match/
-│   │   └── README.md
-│   ├── CERT-09_semi_conformal_projection_equivariance/
-│   │   └── README.md
-│   ├── CERT-10_Pauli_to_Dirac_pairing_in_Spin3/
-│   │   └── README.md
-│   ├── CERT-11_order2_Z_to_Eisenstein_subclock/
-│   │   └── README.md
-│   ├── CERT-12_SM_chain_SU3xSU2xU1_in_U4_in_Spin8/
-│   │   └── README.md
-│   ├── TODO-REM-01_order3_operator_u_su3_centralizer/
-│   │   └── SPEC.md
-│   ├── TODO-REM-02_simultaneous_stabilizers_u_s_sigma/
-│   │   └── SPEC.md
-│   ├── TODO-REM-03_equivariant_projection_certificate/
-│   │   └── SPEC.md
-│   ├── TODO-REM-04_russian_doll_hulls_from_true_FIG/
-│   │   └── SPEC.md
-│   └── TODO-REM-05_hypercharge_quantization_via_C5/
-│       └── SPEC.md
-└── code/
-    ├── requirements.txt
-    ├── python/
-    │   ├── e8_roots.py
-    │   ├── order_operators.py
-    │   ├── stabilizers.py
-    │   ├── angle_spectra.py
-    │   └── __init__.py
-    └── viewers/
-        └── nested_viewer_fixed.html
-```
-
-- **paper/** – ASCII/Word‑safe draft (we will later switch to LaTeX).
-- **proofs/** – one subfolder per certificate. `CERT-*` folders hold *ready* proofs; `TODO-REM-*` are the **five** remaining certifications to code.
-- **code/** – Python utilities + an interactive HTML viewer.
-
-## Reproducibility quickstart
+## Quick start
 
 ```bash
-# Python 3.10+ recommended
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -r code/requirements.txt
-# (Planned) run specific proof scripts, e.g.:
-# python -m code.python.stabilizers --proof CERT-04
+# Python 3.10+, only dependency is numpy
+pip install -r requirements.txt
+
+# Run all theorems (A, C, D, E finish in ~20 s; B takes ~10-15 min)
+python run_all.py
+
+# Quick check — skip Theorem B
+python run_all.py --skip-partition
+
+# Single theorem
+python run_all.py --theorem A
 ```
 
-### HTML viewer
-Open **code/viewers/nested_viewer_fixed.html** in any modern browser (double click). It renders the cuboctahedron hull with two concentric octahedra and runs strict half‑space checks.
+## Repository layout
 
-## How to publish to GitHub
-
-**Option A — Web UI (fastest)**
-1. Create a new GitHub repo (e.g., `cct-sm-spin8`). Leave it empty.
-2. Click **“Add file → Upload files”** and drag the *contents* of this folder in.
-3. Commit to `main` (or `master`).
-
-**Option B — Command line**
-```bash
-cd /path/to/cct-sm-spin8-repo
-git init
-git add .
-git commit -m "Initial commit: proofs scaffolding + viewer"
-git branch -M main
-git remote add origin https://github.com/YOUR-ORG-OR-USER/cct-sm-spin8.git
-git push -u origin main
+```
+├── e8_utils.py             # Shared: root systems, Hopf map, permutation algebra
+├── verify_hierarchy.py     # Theorem A — A₁⊂A₂⊂D₄⊂E₈ hierarchy + kinematic spinors
+├── verify_partition.py     # Theorem B — 15,120 orbits, stabilizer, kernel ≅ 2T
+├── verify_gut_breaking.py  # Theorem C — W(D₅)⊃W(A₄)⊃W(A₂)×W(A₁)
+├── verify_triality.py      # Theorem D — D₄ triality, 8 partitions, S₃ action
+├── verify_angles.py        # Theorem E — semi-conformal projection, angle preservation
+├── run_all.py              # Master runner with summary table
+├── requirements.txt        # numpy >= 1.24
+└── README.md
 ```
 
-After you push, **please send me the GitHub link**. I’ll wire it into the draft and the “Data/Code Availability” section.
+## What each theorem verifies
+
+### Theorem A — Root-system hierarchy (14 claims, <1 s)
+- A₁, A₂, D₄, E₈ root systems: correct counts, norms, ranks
+- Level-1 kinematic spinor: Spin(2) rotor of order 6, R³ = −I (spinorial signature)
+- Compositional structure: A₂ = 3 × A₁, D₄ = 4 × A₂, E₈ = 10 × D₄ via Hopf
+
+### Theorem B — Partition orbit and stabilizer (16 claims, ~10-15 min)
+- 10 Hopf shells, 5 perpendicular pairs
+- BFS orbit under W(E₈) reflections: exactly 15,120 partitions
+- Orbit-stabilizer: |Stab| = 696,729,600 / 15,120 = 46,080
+- Schreier generator closure reaches 46,080
+- Kernel: 24 elements, order distribution {1:1, 2:1, 3:8, 4:6, 6:8} → 2T = SL(2,F₃)
+- Image: 1,920 elements preserving perpendicular pairs → W(D₅)
+- Extension 1 → 2T → Stab → W(D₅) → 1 is non-split
+
+### Theorem C — GUT breaking chain (9 claims, <10 s)
+- W(D₅) = (ℤ/2)⁴ ⋊ S₅ of order 1,920
+- W(A₄) = S₅ subgroup of order 120, index 16
+- W(A₂) × W(A₁) = S₃ × S₂ of order 12, index 10
+- All 10 = C(5,3) Standard Model embeddings verified
+- Even parity: all W(D₅) elements have det = +1
+
+### Theorem D — D₄ triality (9+ claims, <1 s)
+- 16 A₂ sub-root-systems of D₄ (exhaustive search)
+- 8 partitions of D₄ into 4 disjoint A₂'s
+- Triality generators τ (order 3) and σ (order 2) generate S₃
+- S₃ acts on the 8 partitions: 2 orbits of sizes {2, 6}
+- Burnside verification: Σ|Fix(g)|/6 = 2
+
+### Theorem E — Semi-conformal angle preservation (8 claims, <5 s)
+- D₄ angle set in 4D = {60°, 90°, 120°, 180°}
+- Projection along Hopf fiber normal → two concentric shells
+- Outer (cuboctahedral, 12 pts): angles ⊆ {60°, 90°, 120°, 180°}
+- Inner (octahedral): angles ⊆ {90°, 180°}
+- Result independent of projection direction within normal space
+
+## Dependencies
+
+Only **NumPy** (≥ 1.24). No other packages required.
+Tested with Python 3.10–3.12 on Windows and Linux.
+
+## Expected output
+
+```
+==================================================================
+  MACHINE VERIFICATION SUITE
+  Kinematic Spinors on Division-Algebra Root Systems
+==================================================================
+
+Running verify_hierarchy.py ...
+  [PASS] ...
+  ...
+
+==================================================================
+  VERIFICATION SUMMARY
+==================================================================
+  Theorem A (Hierarchy)            : 14/14 PASS   (0.3s)
+  Theorem B (Partition)            : 16/16 PASS   (612.0s)
+  Theorem C (GUT Breaking)         :  9/ 9 PASS   (3.2s)
+  Theorem D (Triality)             :  9/ 9 PASS   (0.4s)
+  Theorem E (Angles)               :  8/ 8 PASS   (1.1s)
+------------------------------------------------------------------
+  TOTAL                            : 56/56
+  Time                             : 617.0s (10.3 min)
+
+  *** ALL PASS ***
+==================================================================
+```
+
+## Algorithm notes
+
+**BFS orbit enumeration (Theorem B):** Starting from the canonical Hopf
+partition, we apply all 120 E₈ Weyl reflections (one per positive root)
+to discover new partitions via breadth-first search. Each partition is
+encoded as a canonical sorted-tuple-of-sorted-tuples for O(1) hashing.
+
+**Schreier generators (Theorem B):** For each reflection r and each
+coset representative gᵢ, compute gᵢ∘r; find the coset representative gⱼ
+of the result; the Schreier generator is gⱼ⁻¹∘gᵢ∘r. Closure under
+composition yields the full stabilizer.
+
+**Kernel identification (Theorem B):** The 24-element kernel is
+identified as 2T = SL(2,F₃) by computing: order distribution
+{1:1, 2:1, 3:8, 4:6, 6:8}, center of order 2, derived subgroup of
+order 8 that is non-abelian with distribution {1:1, 2:1, 4:6} (= Q₈).
+These invariants uniquely determine the binary tetrahedral group.
 
 ## License
-See `LICENSE` (placeholder). We can switch to Apache‑2.0/MIT on your instruction.
 
+MIT License — see `LICENSE`.
+
+## Citation
+
+```bibtex
+@article{irwin2026kinematic,
+  title   = {Kinematic Spinors on Division-Algebra Root Systems:
+             A First-Principles Derivation of the Standard Model Weyl Group},
+  author  = {Irwin, Klee},
+  year    = {2026},
+  note    = {Code: \url{https://github.com/QGRKlee/CCT-StandardModel}}
+}
+```
